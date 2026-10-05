@@ -24,3 +24,5 @@ dist/
 *.docx
 report_assets/report_preview.pdf
 report_assets/*.pdf
+submit/
+report_assets/make_package.py

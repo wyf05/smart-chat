@@ -121,10 +121,12 @@ box(ax, 6.5, 1.0, 2.9, 1.4, "数据卷（Volume）\n宿主机 backend/data\nsmar
 # 外部服务
 box(ax, 3.0, 1.0, 2.9, 1.4, "智谱开放平台\nopen.bigmodel.cn\nglm-4-flash / glm-4.5-flash\n（OpenAI 兼容协议）", fc="#fdf3f7", fs=8.8)
 
-arrow(ax, 2.25, 4.35, 2.95, 4.35, "http://localhost:8080")
-arrow(ax, 5.95, 4.35, 6.45, 4.35, "/api/ 反向代理")
+arrow(ax, 2.25, 4.6, 2.95, 4.6, "localhost:8080")
+ax.text(2.6, 4.72, "http://", fontsize=8, ha="center", color="#333333")
+arrow(ax, 5.95, 4.6, 6.45, 4.6, "")
+ax.text(6.2, 4.72, "/api 反代", fontsize=8.5, ha="center", color="#333333")
 arrow(ax, 7.95, 3.45, 7.95, 2.45, "挂载")
-arrow(ax, 5.95, 2.0, 6.45, 1.7, "HTTPS")
+arrow(ax, 5.95, 1.7, 6.45, 1.7, "HTTPS")
 
 plt.tight_layout()
 plt.savefig(f"{OUT}/fig_deploy.png", dpi=170, bbox_inches="tight")

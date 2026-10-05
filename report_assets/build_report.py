@@ -48,7 +48,7 @@ def clean_pPr(p_el, keep_shd=False):
     pPr = p_el.find(qn("w:pPr"))
     if pPr is None:
         return
-    for tag in ("w:numPr", "w:pStyle"):
+    for tag in ("w:numPr", "w:pStyle", "w:pageBreakBefore"):
         e = pPr.find(qn(tag))
         if e is not None:
             pPr.remove(e)
@@ -88,6 +88,10 @@ def new_para_after(anchor_p, text="", kind="body"):
         fmt.space_after = Pt(0)
         fmt.first_line_indent = Pt(0)
         fmt.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        shd = OxmlElement("w:shd")
+        shd.set(qn("w:val"), "clear")
+        shd.set(qn("w:fill"), "F2F2F2")
+        np_p._element.get_or_add_pPr().append(shd)
         for r in np_p.runs:
             set_run_font(r, size=10.5, name_cn="宋体", name_en="Consolas")
     elif kind == "caption":
@@ -209,12 +213,26 @@ toc_title.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
 for r in toc_title.runs:
     set_run_font(r, size=16, bold=True, name_cn="黑体")
 
+# 使用说明（可见段落，置于目录标题下）
+hint_el = copy.deepcopy(h1_first._element)
+for child in list(hint_el):
+    if child.tag.endswith("}r") or child.tag.endswith("}hyperlink"):
+        hint_el.remove(child)
+clean_pPr(hint_el)
+toc_title._element.addnext(hint_el)
+hint_p = Paragraph(hint_el, h1_first._parent)
+hint_p.text = "（请在本页通过 Word“引用 → 目录 → 自动目录”插入目录，或右键下方目录域选择“更新域”）"
+hint_p.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
+for r in hint_p.runs:
+    set_run_font(r, size=12)
+
+# TOC 域代码（放在说明段之后）
 toc_p_el = copy.deepcopy(h1_first._element)
 for child in list(toc_p_el):
     if child.tag.endswith("}r") or child.tag.endswith("}hyperlink"):
         toc_p_el.remove(child)
 clean_pPr(toc_p_el)
-h1_first._element.addprevious(toc_p_el)
+hint_p._element.addnext(toc_p_el)
 toc_p = Paragraph(toc_p_el, h1_first._parent)
 r1 = toc_p.add_run()
 fld_b = OxmlElement("w:fldChar"); fld_b.set(qn("w:fldCharType"), "begin"); fld_b.set(qn("w:dirty"), "true")
@@ -226,7 +244,7 @@ r2._element.append(instr)
 r3 = toc_p.add_run()
 fld_sep = OxmlElement("w:fldChar"); fld_sep.set(qn("w:fldCharType"), "separate")
 r3._element.append(fld_sep)
-r4 = toc_p.add_run("（在 Word 中右键此处 → 更新域 → 更新整个目录）")
+r4 = toc_p.add_run("（目录内容：更新域后自动生成）")
 set_run_font(r4, size=12)
 r5 = toc_p.add_run()
 fld_e = OxmlElement("w:fldChar"); fld_e.set(qn("w:fldCharType"), "end")
@@ -387,22 +405,22 @@ write_body(find_para("【请填写：描述该功能的实现思路"), [
     "落库 → 统一响应返回。",
 ])
 write_code(find_para("【请填写：贴关键代码片段"), "backend/app/llm.py（多轮对话核心：历史一起发给模型）",
-'''def chat(user_message: str, history: list[dict] | None = None) -> str:
-    messages = [SystemMessage(content=SYSTEM_PROMPT)]    # 1. 人设（system 角色）
+'''def chat(user_message, history=None) -> str:
+    messages = [SystemMessage(content=SYSTEM_PROMPT)]  # 1. 人设
     if history:
-        messages.extend(to_messages(history))            # 2. 历史：数据库查出的 {role, content}
+        messages.extend(to_messages(history))          # 2. 历史：查库所得
     messages.append(HumanMessage(content=user_message))  # 3. 本轮问题
-    return llm.invoke(messages).content                  # 历史一起发给模型 => 多轮对话
+    return llm.invoke(messages).content   # 历史一起发给模型 => 多轮对话
 
 
+# backend/app/memory.py：一轮问答写入数据库（持久化）
 def append(db, session_id, user_msg, assistant_msg) -> None:
-    """backend/app/memory.py：一轮问答写入数据库（持久化），并维护会话元信息"""
     session = db.get(ChatSession, session_id)
     if not session:
         return
     db.add(ChatMessage(session_id=session_id, role="user", content=user_msg))
     db.add(ChatMessage(session_id=session_id, role="assistant", content=assistant_msg))
-    if session.title == "新对话" and user_msg:            # 首条消息自动生成会话标题
+    if session.title == "新对话" and user_msg:  # 首条消息自动生成标题
         session.title = user_msg[:16] + ("…" if len(user_msg) > 16 else "")
     db.commit()''')
 img_p = find_para("【请填写：贴运行截图并编号")
@@ -422,20 +440,21 @@ write_body(find_para("【请填写：描述该功能的实现思路"), [
 write_code(find_para("【请填写：贴关键代码片段"), "backend/app/agent.py（工具注册与智能体组装）",
 '''@tool
 def query_order(order_id: str) -> str:
-    """根据订单号查询订单的物流状态。参数 order_id 是订单号，格式如 "DD20240001"。
-    用户询问订单进度、物流、发货、签收情况时必须使用本工具。"""   # 说明书：写清触发条件
-    orders = {"DD20240001": "已发货，顺丰速运，预计明天 18:00 前送达，收件人张先生", ...}
+    """根据订单号查询物流状态。order_id 格式如 "DD20240001"。
+    用户询问订单进度、物流、发货、签收时必须使用本工具。"""  # 说明书
+    orders = {"DD20240001": "已发货，顺丰速运，预计明天 18:00 前送达", ...}
     return orders.get(order_id, f"未找到订单 {order_id}，请核对订单号")
 
 
 agent = create_agent(
-    model=agent_llm,                  # 温度 0：工具调用是精确动作，要稳定
+    model=agent_llm,                  # 温度 0：工具调用要稳定
     tools=TOOLS,                      # 5 个工具：订单/天气/计算/时间/优惠券
-    system_prompt="你是「店小智」……必须调用对应工具获取真实结果，禁止编造",
-    checkpointer=SqliteSaver(_conn),  # 记忆持久化：thread_id 相同即共享记忆
+    system_prompt="你是「店小智」……必须调用工具，禁止编造",
+    checkpointer=SqliteSaver(_conn),  # 记忆持久化：thread_id 共享记忆
 )
-result = agent.invoke({"messages": [{"role": "user", "content": message}]},
-                      config={"configurable": {"thread_id": session_id}})''')
+result = agent.invoke(
+    {"messages": [{"role": "user", "content": message}]},
+    config={"configurable": {"thread_id": session_id}})''')
 img_p = find_para("【请填写：贴运行截图并编号")
 image_para(img_p, os.path.join(ASSETS, "fig_ui_agent_order.png"), 13.5)
 cap = new_para_after(img_p, "图4　智能体工具调用效果（回复前缀展示本轮调用的工具名）", kind="caption")
@@ -458,31 +477,33 @@ write_body(body1, [
     "智能体链路，保证不漏真实业务请求。",
 ])
 code_anchor = new_para_after(body1, "", kind="body")
-write_code(code_anchor, "backend/app/llm.py（结构化输出意图分类 + 规则兜底）",
-'''class Intent(BaseModel):   # backend/app/schemas.py：字段即格式
-    intent: Literal["chat", "agent"] = Field(description="chat=闲聊；agent=需工具的请求")
+code_end = write_code(code_anchor, "backend/app/llm.py（结构化输出意图分类 + 规则兜底）",
+'''class Intent(BaseModel):  # schemas.py：字段即格式
+    intent: Literal["chat", "agent"] = Field(
+        description="chat=闲聊；agent=需工具的请求")
 
     @field_validator("intent", mode="before")
-    def _normalize(cls, v):              # 容错：模型偶尔返回 "Agent"/"agent。"
+    def _normalize(cls, v):       # 容错：兼容 "Agent"/"agent。" 等
         s = str(v).strip().lower()
         return "agent" if "agent" in s else "chat"
 
 
+# llm.py：显式走函数调用通道，兼容国产模型
 _intent_llm = ChatOpenAI(..., temperature=0).with_structured_output(
-    Intent, method="function_calling")   # 显式走函数调用通道，兼容国产模型
+    Intent, method="function_calling")
 
 
 def classify_intent(message: str) -> str:
     try:
         result = _intent_llm.invoke([...])
         if result is not None:
-            return result.intent         # 结构化输出正常时直接采用
+            return result.intent       # 正常时直接采用
     except Exception as e:
-        logger.warning(f"意图分类模型调用失败，启用规则兜底: {e}")
-    if any(k in message for k in _AGENT_KEYWORDS):   # 兜底：关键词规则
+        logger.warning(f"分类失败，启用规则兜底: {e}")
+    if any(k in message for k in _AGENT_KEYWORDS):  # 关键词兜底
         return "agent"
     return "chat"''')
-eff = new_para_after(code_anchor, "运行效果：", kind="label")
+eff = new_para_after(code_end, "运行效果：", kind="label")
 img_p = new_para_after(eff, "", kind="center")
 run = img_p.add_run()
 run.add_picture(os.path.join(ASSETS, "fig_swagger.png"), width=Cm(14.0))
@@ -501,7 +522,7 @@ write_body(body1, [
     "EventSource 只支持 GET，POST 流式必须手动读流），实现打字机效果。Nginx 反代需关闭 proxy_buffering 才能透传 SSE。",
 ])
 code_anchor = new_para_after(body1, "", kind="body")
-write_code(code_anchor, "backend/app/main.py（后端 SSE 接口）",
+code_end = write_code(code_anchor, "backend/app/main.py（后端 SSE 接口）",
 '''@app.post("/api/chat/stream")
 async def chat_stream_api(req: ChatRequest, db: Session = Depends(get_db)):
     messages = [SystemMessage(content=SYSTEM_PROMPT)]
@@ -510,15 +531,17 @@ async def chat_stream_api(req: ChatRequest, db: Session = Depends(get_db)):
 
     async def event_generator():
         full_reply = ""
-        async for chunk in llm.astream(messages):        # 异步流式逐块接收
+        async for chunk in llm.astream(messages):  # 异步流式逐块接收
             if chunk.content:
                 full_reply += chunk.content
+                # SSE 格式：data: {...}\\n\\n，逐块推送给前端
                 yield f"data: {json.dumps({'delta': chunk.content}, ensure_ascii=False)}\\n\\n"
-        memory.append(db, req.session_id, req.message, full_reply)  # 完整回复落库
-        yield "data: [DONE]\\n\\n"                          # 结束信号
+        memory.append(db, req.session_id, req.message, full_reply)  # 落库
+        yield "data: [DONE]\\n\\n"                     # 结束信号
 
-    return StreamingResponse(event_generator(), media_type="text/event-stream")''')
-eff = new_para_after(code_anchor, "运行效果：", kind="label")
+    return StreamingResponse(event_generator(),
+                             media_type="text/event-stream")''')
+eff = new_para_after(code_end, "运行效果：", kind="label")
 img_p = new_para_after(eff, "", kind="center")
 run = img_p.add_run()
 run.add_picture(os.path.join(ASSETS, "fig_ui_stream.png"), width=Cm(13.5))
@@ -575,11 +598,15 @@ probs = [
 ]
 for title, lines in probs:
     p = find_para(title.split("：")[0] + "：")
-    write_body(p, lines, bold_first_label=False)
     p.text = title
     p.paragraph_format.first_line_indent = Pt(0)
+    p.paragraph_format.line_spacing_rule = WD_LINE_SPACING.ONE_POINT_FIVE
+    p.paragraph_format.space_after = Pt(6)
     for r in p.runs:
         set_run_font(r, size=12, bold=True)
+    anchor = p
+    for line in lines:
+        anchor = new_para_after(anchor, line, kind="body")
 
 # ================= 第 5 章 部署方案 =================
 delete_para(find_para("本章回答“系统怎么交付”"))
@@ -738,6 +765,20 @@ write_body(find_para("【请填写：附录内容（可选）"), [
     "--port 8000 + npm run dev；容器化 docker compose up -d --build。",
     "附录C　评估脚本输出：test_eval.py 全部 12 个用例通过（输出原文见代码仓库 report_assets/test_eval_output.txt）。",
 ])
+
+# ================= 全局清扫：删除全部残留占位符与填写提示 =================
+# 注意：必须放在所有内容写入之后，避免误删模板中尚未替换的合法段落
+removed = 0
+changed = True
+while changed:
+    changed = False
+    for p in list(d.paragraphs):
+        t = p.text.strip()
+        if ("【请填写" in t) or t.startswith("填写提示"):
+            delete_para(p)
+            removed += 1
+            changed = True
+print("removed placeholders:", removed)
 
 d.save(OUT)
 print("saved:", OUT)

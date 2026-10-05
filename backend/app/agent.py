@@ -1,4 +1,8 @@
-"""智能体模块：LangChain 实现带工具调用与持久记忆的客服智能体"""
+"""智能体模块：LangChain 实现带工具调用与持久记忆的客服智能体
+
+工具的数据来源是业务数据库（orders/coupons/knowledge 表），
+在"业务数据中心"页面修改数据后，智能体的回答会同步变化。
+"""
 import sqlite3
 from datetime import datetime
 
@@ -7,21 +11,21 @@ from langchain.tools import tool
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.sqlite import SqliteSaver
 
+from app.catalog import (query_coupon_by_code, query_order_by_id,
+                         search_knowledge as search_knowledge_db)
 from app.config import AGENT_DB_PATH, AGENT_MODEL, API_KEY, BASE_URL
+from app.database import SessionLocal
 
 
 @tool
 def query_order(order_id: str) -> str:
-    """根据订单号查询订单的物流状态。参数 order_id 是订单号，格式如 "DD20240001"。
+    """根据订单号查询订单的状态、金额、收件人与物流信息。参数 order_id 是订单号，格式如 "DD20240001"。
     用户询问订单进度、物流、发货、签收情况时必须使用本工具。"""
-    # 教学演示用模拟数据；真实项目对接公司订单系统 API 或数据库
-    orders = {
-        "DD20240001": "已发货，顺丰速运，预计明天 18:00 前送达，收件人张先生",
-        "DD20240002": "待付款，订单金额 129.00 元，30 分钟内未支付将自动取消",
-        "DD20240003": "已签收，签收时间 2026-09-18 14:32，感谢您的购买",
-        "DD20240004": "打包中，预计今天 20:00 前发出",
-    }
-    return orders.get(order_id, f"未找到订单 {order_id}，请核对订单号（格式如 DD20240001）")
+    db = SessionLocal()
+    try:
+        return query_order_by_id(db, order_id)   # 数据来源：业务数据库 orders 表
+    finally:
+        db.close()
 
 
 @tool
@@ -60,18 +64,33 @@ def get_current_time() -> str:
 
 @tool
 def get_coupon(code: str) -> str:
-    """根据优惠券码查询优惠券的状态。参数 code 是优惠券码，格式如 "QUAN100"。
+    """根据优惠券码查询优惠券的名称、面额、有效期与状态。参数 code 是券码，格式如 "QUAN100"。
     用户询问优惠券、优惠码、折扣券是否可用、面额、有效期时必须使用本工具。"""
-    coupons = {
-        "QUAN100": "满100减20券，有效期至 2026-10-31，状态：可用",
-        "QUAN50": "满50减10券，有效期至 2026-09-30，状态：已过期",
-        "QUANNEW": "新人立减15券，无门槛，状态：已使用",
-        "QUANVIP": "会员9折券，有效期至 2026-12-31，状态：可用",
-    }
-    return coupons.get(code, f"未找到优惠券 {code}，请核对券码（示例：QUAN100）")
+    db = SessionLocal()
+    try:
+        return query_coupon_by_code(db, code)    # 数据来源：业务数据库 coupons 表
+    finally:
+        db.close()
 
 
-TOOLS = [query_order, get_weather, calculate, get_current_time, get_coupon]
+@tool
+def search_knowledge(query: str) -> str:
+    """检索商家知识库（售后政策、发货时间、付款方式、发票等常见问题）。
+    参数 query 是与问题相关的关键词或原问题。
+    用户咨询店铺规则、售后政策、发货付款发票等业务问题时必须优先使用本工具；
+    检索到内容时回答需注明"来自知识库"，未检索到时如实告知并正常回答。"""
+    db = SessionLocal()
+    try:
+        items = search_knowledge_db(db, query)   # 数据来源：业务数据库 knowledge_items 表
+        if not items:
+            return "知识库中未检索到相关内容"
+        parts = [f"【{it.question}】{it.answer}" for it in items]
+        return "知识库检索结果：" + " ｜ ".join(parts)
+    finally:
+        db.close()
+
+
+TOOLS = [query_order, get_weather, calculate, get_current_time, get_coupon, search_knowledge]
 
 # 智能体专用模型：温度 0（工具调用是精确动作，要稳定不要发散）
 # extra_body 关闭 glm-4.5-flash 的思考模式：客服回复不需要展示推理过程，还能显著降低延迟
@@ -90,7 +109,7 @@ agent = create_agent(
     tools=TOOLS,
     system_prompt=(
         "你是「店小智」，一家电商公司的智能客服。"
-        "用户的问题涉及订单查询、天气、当前时间、优惠券、数学计算时，"
+        "用户的问题涉及订单查询、天气、当前时间、优惠券、数学计算、店铺售后政策时，"
         "必须调用对应工具获取真实结果，禁止编造；"
         "其他问题用简体中文礼貌、简洁地回答，不要为了调用工具而调用工具。"
     ),

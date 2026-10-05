@@ -7,3 +7,4 @@ langchain>=1.0.0
 langchain-openai>=1.0.0
 langgraph>=1.0.0
 langgraph-checkpoint-sqlite>=2.0.0
+pyjwt>=2.8.0

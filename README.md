@@ -6,24 +6,34 @@
 
 ## 功能总览
 
-| 模块 | 说明 |
+系统采用多页面工作台形态（登录 → 首页仪表盘 → 各子页面）：
+
+| 页面 | 说明 |
 | --- | --- |
-| 多轮对话 | `/api/chat`，历史消息落库 SQLite，服务重启不丢；支持 SSE 流式打字机输出 |
-| 智能体 | `/api/agent/chat`，ReAct 循环 + Function Calling，5 个业务工具，SqliteSaver 记忆持久化 |
-| 统一入口（意图路由） | `/api/smart/chat`，结构化输出意图分类，自动分流"闲聊 / 需工具"链路 |
-| 会话管理 | 列表 / 新建 / 删除 / 改名（PATCH）/ 历史消息，第一条消息自动生成会话标题 |
-| 企业级特性 | 统一响应格式、滑动窗口限流（每 IP 每分钟 20 次）、全链路日志、异常兜底、密钥环境变量管理 |
+| 登录页 | JWT 账号登录（默认演示账号 `admin / admin123`），所有接口持 token 访问 |
+| 首页仪表盘 | 会话数/消息数/工具调用数/平均耗时指标卡 + 子页面入口 |
+| 智能对话 | 多轮对话 + SQLite 持久化；SSE 流式打字机；智能体 6 工具；意图路由统一入口 |
+| 业务数据中心 | 订单/优惠券的数据库化管理（增删改），一键"去咨询"联动智能体验证真实数据 |
+| 智能知识库 | FAQ 维护（增删改查），检索封装为智能体第 6 个工具 `search_knowledge`，回答注明"来自知识库"；支持页内检索效果测试 |
+| 数据统计 | 基于对话埋点的 ECharts 看板：工具调用分布、意图路由占比、近 7 日消息量、平均耗时 |
+
+| 后端模块 | 说明 |
+| --- | --- |
+| 会话管理 | 列表 / 新建 / 删除 / 改名（PATCH）/ 历史消息，首条消息自动生成会话标题 |
+| 企业级特性 | JWT 鉴权、统一响应格式、滑动窗口限流（每 IP 每分钟 20 次）、全链路日志、异常兜底、密钥环境变量管理 |
+| 统计埋点 | 每轮对话记录 route（chat/agent）、tools_used、duration_ms，支撑数据统计页 |
 | 交付 | `docker compose up -d --build` 一键部署，数据卷持久化，Nginx 反向代理 |
 
 ## 业务工具（智能体可调用）
 
 | 工具 | 功能 |
 | --- | --- |
-| `query_order` | 订单物流状态查询（模拟数据，接口可替换真实订单系统） |
+| `query_order` | 订单状态查询（**读业务数据库 orders 表**，后台改数据回答实时变） |
 | `get_weather` | 城市天气查询（适合发货/出行判断） |
 | `calculate` | 数学表达式精确计算（含非法字符过滤，防代码注入） |
 | `get_current_time` | 当前日期时间 |
-| `get_coupon` | 优惠券状态查询（自定义扩展工具） |
+| `get_coupon` | 优惠券状态查询（**读业务数据库 coupons 表**） |
+| `search_knowledge` | 知识库检索（**读 knowledge_items 表**，评分细则点名的创新加分项） |
 
 ## 技术栈
 
@@ -86,24 +96,33 @@ python test_api.py     # 接口冒烟测试（需后端已启动）
 smart-chat/
 ├── backend/
 │   ├── app/
-│   │   ├── main.py        # FastAPI 入口：中间件（日志+限流）+ 全部接口
+│   │   ├── main.py        # FastAPI 入口：认证 + 中间件（日志+限流）+ 全部接口
 │   │   ├── config.py      # 配置中心（.env 读取，密钥不入库）
-│   │   ├── database.py    # SQLAlchemy 引擎/会话工厂
-│   │   ├── models.py      # ORM：chat_sessions / chat_messages
+│   │   ├── database.py    # 引擎/建表/轻量迁移/种子数据
+│   │   ├── models.py      # ORM：会话/消息(含埋点)/订单/优惠券/知识库/用户
 │   │   ├── schemas.py     # Pydantic 请求/响应/意图模型
+│   │   ├── security.py    # JWT 签发校验 + 密码哈希
+│   │   ├── catalog.py     # 业务数据中心：订单/优惠券/知识库存取与检索
+│   │   ├── stats.py       # 统计聚合（数据统计页数据源）
 │   │   ├── llm.py         # 模型封装：chat() / classify_intent() / 流式
-│   │   ├── memory.py      # 会话与消息的业务存取
-│   │   └── agent.py       # 智能体：5 工具 + create_agent + SqliteSaver
-│   ├── test_agent.py / test_eval.py / test_api.py
+│   │   ├── memory.py      # 会话与消息的业务存取（含统计埋点）
+│   │   └── agent.py       # 智能体：6 工具 + create_agent + SqliteSaver
+│   ├── test_agent.py / test_eval.py / test_api.py / test_v3.py
 │   ├── Dockerfile
 │   └── requirements.txt
 ├── frontend/
 │   ├── src/
-│   │   ├── App.vue                # 布局与会话状态中枢
-│   │   ├── api/index.js           # 接口层（唯一 axios 出口）
-│   │   └── components/
-│   │       ├── SessionSidebar.vue # 会话侧边栏
-│   │       └── ChatPanel.vue      # 聊天面板（流式/智能体开关）
+│   │   ├── router/index.js        # 路由 + 登录守卫
+│   │   ├── layouts/AppLayout.vue  # 顶部导航布局
+│   │   ├── api/index.js           # 接口层（axios + JWT 拦截器）
+│   │   ├── views/
+│   │   │   ├── LoginView.vue      # 登录页
+│   │   │   ├── DashboardView.vue  # 首页仪表盘
+│   │   │   ├── ChatView.vue       # 智能对话
+│   │   │   ├── DataCenterView.vue # 业务数据中心（订单/优惠券）
+│   │   │   ├── KnowledgeView.vue  # 智能知识库
+│   │   │   └── StatsView.vue      # 数据统计（ECharts）
+│   │   └── components/            # SessionSidebar / ChatPanel
 │   ├── Dockerfile / nginx.conf    # 多阶段构建 + 反向代理
 │   └── package.json
 ├── docker-compose.yml

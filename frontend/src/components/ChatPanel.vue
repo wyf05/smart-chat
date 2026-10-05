@@ -1,10 +1,12 @@
 <script setup>
 import { ref, nextTick, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Loading } from '@element-plus/icons-vue'
 import { sendChat, sendAgentChat, getMessages } from '../api/index.js'
 
 const props = defineProps({ sessionId: { type: String, required: true } })
+const route = useRoute()
 
 const messages = ref([])       // [{role:'user'|'assistant', content:'...'}]
 const inputText = ref('')
@@ -13,7 +15,17 @@ const agentMode = ref(false)   // 智能体模式开关
 const streamMode = ref(true)   // 流式输出开关，默认开启
 const msgListRef = ref(null)
 
-onMounted(loadHistory)   // 组件挂载时加载该会话的历史消息
+onMounted(async () => {
+  await loadHistory()
+  // 支持从其他页面（业务数据/知识库）带问题跳转过来，自动开启智能体并提问
+  if (route.query.ask) {
+    inputText.value = String(route.query.ask)
+    if (route.query.agent === '1') agentMode.value = true
+    const text = inputText.value
+    inputText.value = ''
+    await handleSendText(text)
+  }
+})
 
 async function loadHistory() {
   try {
@@ -25,27 +37,19 @@ async function loadHistory() {
   scrollToBottom()
 }
 
-async function handleSend() {
-  const text = inputText.value.trim()
-  if (!text) { ElMessage.warning('请输入内容再发送'); return }
+async function handleSendText(text) {
   if (loading.value) return
-
   messages.value.push({ role: 'user', content: text })
-  inputText.value = ''
   scrollToBottom()
-
   loading.value = true
   try {
-    // 流式开关开启且非智能体模式：走 SSE 流式接口（打字机效果）
     if (streamMode.value && !agentMode.value) {
       await handleSendStream(text)
-      return   // finally 仍会执行，重置 loading
+      return
     }
-    // 根据开关选择普通对话 or 智能体对话
     const res = agentMode.value
       ? await sendAgentChat(text, props.sessionId)
       : await sendChat(text, props.sessionId)
-
     if (res.data.code === 0) {
       let replyText = res.data.data.reply
       const tools = res.data.data.tools_used || []
@@ -65,6 +69,13 @@ async function handleSend() {
   }
 }
 
+async function handleSend() {
+  const text = inputText.value.trim()
+  if (!text) { ElMessage.warning('请输入内容再发送'); return }
+  inputText.value = ''
+  await handleSendText(text)
+}
+
 // 流式发送：fetch 逐块读取 SSE
 // 注意：浏览器原生 EventSource 只支持 GET，POST 流式要用 fetch + ReadableStream 手动读
 async function handleSendStream(text) {
@@ -73,7 +84,10 @@ async function handleSendStream(text) {
 
   const res = await fetch('/api/chat/stream', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${localStorage.getItem('dxz_token') || ''}`,  // SSE 也要带 JWT
+    },
     body: JSON.stringify({ message: text, session_id: props.sessionId }),
   })
   const reader = res.body.getReader()

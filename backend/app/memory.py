@@ -53,13 +53,19 @@ def get_history(db: Session, session_id: str) -> list[dict]:
     return [{"role": m.role, "content": m.content} for m in get_messages(db, session_id)]
 
 
-def append(db: Session, session_id: str, user_msg: str, assistant_msg: str) -> None:
-    """把一轮问答写入数据库，并维护会话元信息"""
+def append(db: Session, session_id: str, user_msg: str, assistant_msg: str,
+           route: str | None = None, tools: list[str] | None = None,
+           duration_ms: int | None = None) -> None:
+    """把一轮问答写入数据库，并维护会话元信息与统计埋点"""
     session = db.get(ChatSession, session_id)
     if not session:
         return
-    db.add(ChatMessage(session_id=session_id, role="user", content=user_msg))
-    db.add(ChatMessage(session_id=session_id, role="assistant", content=assistant_msg))
+    db.add(ChatMessage(session_id=session_id, role="user", content=user_msg,
+                       route=route, tools_used=",".join(tools or []) or None,
+                       duration_ms=duration_ms))
+    db.add(ChatMessage(session_id=session_id, role="assistant", content=assistant_msg,
+                       route=route, tools_used=",".join(tools or []) or None,
+                       duration_ms=duration_ms))
     # 企业细节：第一条消息自动生成会话标题（聊天软件都这么做的）
     if session.title == "新对话" and user_msg:
         session.title = user_msg[:16] + ("…" if len(user_msg) > 16 else "")

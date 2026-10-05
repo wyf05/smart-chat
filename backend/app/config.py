@@ -19,6 +19,9 @@ AGENT_DB_PATH: str = os.getenv("AGENT_DB_PATH", "data/agent_memory.db")
 # 限流阈值也是配置，集中在配置中心管理
 RATE_LIMIT: int = int(os.getenv("RATE_LIMIT", "20"))
 
+# JWT 签名密钥：生产环境应通过环境变量注入随机长串
+JWT_SECRET: str = os.getenv("JWT_SECRET", "smart-chat-dev-secret-change-me")
+
 # 系统提示词：给 AI 定人设（电商客服场景）
 SYSTEM_PROMPT: str = (
     "你是「店小智」，一家电商公司的智能客服。"

@@ -1,4 +1,4 @@
-"""FastAPI 服务入口：中间件（日志+限流）+ 会话管理 + 全部对话接口"""
+"""FastAPI 服务入口：认证 + 中间件（日志+限流）+ 会话/对话/业务数据/统计全部接口"""
 import json
 import logging
 import time
@@ -10,21 +10,24 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from langchain_core.messages import HumanMessage, SystemMessage
 from sqlalchemy.orm import Session
 
-from app import memory
+from app import catalog, memory, stats
 from app.agent import agent_chat
 from app.config import RATE_LIMIT, SYSTEM_PROMPT
 from app.database import SessionLocal, init_db
 from app.llm import chat, classify_intent, llm, to_messages
-from app.schemas import (ChatRequest, ChatResponse, MessageOut,
-                         SessionOut, SessionTitleUpdate)
+from app.models import User
+from app.schemas import (ChatRequest, ChatResponse, CouponIn, KnowledgeIn,
+                         LoginRequest, MessageOut, OrderIn, SessionOut,
+                         SessionTitleUpdate)
+from app.security import create_token, hash_password, verify_token
 
 # ============ 日志配置：线上排查问题的唯一依靠 ============
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("smart-chat")
 
-init_db()   # 启动时自动建表
+init_db()   # 启动时自动建表/迁移/种子数据
 
-app = FastAPI(title="店小智智能客服 API", version="2.0.0")
+app = FastAPI(title="店小智智能客服 API", version="3.0.0")
 
 # CORS 跨域：前端(5173端口)与后端(8000端口)不同源，必须放行才能互相访问
 app.add_middleware(
@@ -80,20 +83,34 @@ def index():
     return {"message": "店小智智能客服后端运行中，接口文档见 /docs"}
 
 
-# ============ 会话管理接口 ============
-@app.get("/api/sessions", response_model=list[SessionOut])
+# ============ 认证接口（无需 token）============
+@app.post("/api/auth/login")
+def login(req: LoginRequest, db: Session = Depends(get_db)):
+    """账号登录：校验通过后签发 JWT"""
+    user = db.get(User, req.username)
+    if not user or user.password_hash != hash_password(req.password):
+        raise HTTPException(status_code=401, detail="用户名或密码错误")
+    return {"code": 0, "message": "success",
+            "data": {"token": create_token(user.username), "username": user.username}}
+
+
+# ============ 会话管理接口（需登录）============
+@app.get("/api/sessions", response_model=list[SessionOut],
+         dependencies=[Depends(verify_token)])
 def list_sessions_api(db: Session = Depends(get_db)):
     """会话列表（前端侧边栏用）"""
     return memory.list_sessions(db)
 
 
-@app.post("/api/sessions", response_model=SessionOut)
+@app.post("/api/sessions", response_model=SessionOut,
+          dependencies=[Depends(verify_token)])
 def create_session_api(db: Session = Depends(get_db)):
     """新建会话"""
     return memory.create_session(db)
 
 
-@app.delete("/api/sessions/{session_id}", response_model=ChatResponse)
+@app.delete("/api/sessions/{session_id}", response_model=ChatResponse,
+            dependencies=[Depends(verify_token)])
 def delete_session_api(session_id: str, db: Session = Depends(get_db)):
     """删除会话及其全部消息"""
     if not memory.delete_session(db, session_id):
@@ -101,29 +118,116 @@ def delete_session_api(session_id: str, db: Session = Depends(get_db)):
     return ChatResponse(code=0, message="已删除", data={})
 
 
-@app.patch("/api/sessions/{session_id}", response_model=SessionOut)
+@app.patch("/api/sessions/{session_id}", response_model=SessionOut,
+           dependencies=[Depends(verify_token)])
 def rename_session_api(session_id: str, req: SessionTitleUpdate, db: Session = Depends(get_db)):
     """修改会话标题"""
     if not memory.rename_session(db, session_id, req.title):
         raise HTTPException(status_code=404, detail="会话不存在")
-    db_session = db.get(memory.ChatSession, session_id)
-    return db_session
+    return db.get(memory.ChatSession, session_id)
 
 
-@app.get("/api/sessions/{session_id}/messages", response_model=list[MessageOut])
+@app.get("/api/sessions/{session_id}/messages", response_model=list[MessageOut],
+         dependencies=[Depends(verify_token)])
 def get_messages_api(session_id: str, db: Session = Depends(get_db)):
     """某会话的全部历史消息（前端切换会话时恢复聊天记录）"""
     return memory.get_messages(db, session_id)
 
 
-# ============ 对话接口 ============
-@app.post("/api/chat", response_model=ChatResponse)
+# ============ 业务数据中心：订单（需登录）============
+@app.get("/api/orders", dependencies=[Depends(verify_token)])
+def list_orders_api(db: Session = Depends(get_db)):
+    """订单列表"""
+    return [{"order_id": o.order_id, "status": o.status, "amount": o.amount,
+             "receiver": o.receiver, "logistics": o.logistics} for o in catalog.list_orders(db)]
+
+
+@app.post("/api/orders", dependencies=[Depends(verify_token)])
+def save_order_api(req: OrderIn, db: Session = Depends(get_db)):
+    """新增/修改订单（智能体查询的即时数据源）"""
+    o = catalog.upsert_order(db, req.order_id, req.status, req.amount,
+                             req.receiver, req.logistics)
+    return ChatResponse(code=0, message="success", data={"order_id": o.order_id})
+
+
+@app.delete("/api/orders/{order_id}", dependencies=[Depends(verify_token)])
+def delete_order_api(order_id: str, db: Session = Depends(get_db)):
+    if not catalog.delete_order(db, order_id):
+        raise HTTPException(status_code=404, detail="订单不存在")
+    return ChatResponse(code=0, message="已删除", data={})
+
+
+# ============ 业务数据中心：优惠券（需登录）============
+@app.get("/api/coupons", dependencies=[Depends(verify_token)])
+def list_coupons_api(db: Session = Depends(get_db)):
+    """优惠券列表"""
+    return [{"code": c.code, "title": c.title, "discount": c.discount,
+             "valid_until": c.valid_until, "status": c.status} for c in catalog.list_coupons(db)]
+
+
+@app.post("/api/coupons", dependencies=[Depends(verify_token)])
+def save_coupon_api(req: CouponIn, db: Session = Depends(get_db)):
+    """新增/修改优惠券"""
+    c = catalog.upsert_coupon(db, req.code, req.title, req.discount,
+                              req.valid_until, req.status)
+    return ChatResponse(code=0, message="success", data={"code": c.code})
+
+
+@app.delete("/api/coupons/{code}", dependencies=[Depends(verify_token)])
+def delete_coupon_api(code: str, db: Session = Depends(get_db)):
+    if not catalog.delete_coupon(db, code):
+        raise HTTPException(status_code=404, detail="优惠券不存在")
+    return ChatResponse(code=0, message="已删除", data={})
+
+
+# ============ 业务数据中心：知识库（需登录）============
+@app.get("/api/knowledge", dependencies=[Depends(verify_token)])
+def list_knowledge_api(db: Session = Depends(get_db)):
+    """知识库条目列表"""
+    return [{"id": k.id, "question": k.question, "answer": k.answer,
+             "keywords": k.keywords} for k in catalog.list_knowledge(db)]
+
+
+@app.post("/api/knowledge", dependencies=[Depends(verify_token)])
+def add_knowledge_api(req: KnowledgeIn, db: Session = Depends(get_db)):
+    """新增知识条目"""
+    k = catalog.add_knowledge(db, req.question, req.answer, req.keywords)
+    return ChatResponse(code=0, message="success", data={"id": k.id})
+
+
+@app.put("/api/knowledge/{item_id}", dependencies=[Depends(verify_token)])
+def update_knowledge_api(item_id: int, req: KnowledgeIn, db: Session = Depends(get_db)):
+    """修改知识条目"""
+    if not catalog.update_knowledge(db, item_id, req.question, req.answer, req.keywords):
+        raise HTTPException(status_code=404, detail="知识条目不存在")
+    return ChatResponse(code=0, message="success", data={})
+
+
+@app.delete("/api/knowledge/{item_id}", dependencies=[Depends(verify_token)])
+def delete_knowledge_api(item_id: int, db: Session = Depends(get_db)):
+    if not catalog.delete_knowledge(db, item_id):
+        raise HTTPException(status_code=404, detail="知识条目不存在")
+    return ChatResponse(code=0, message="已删除", data={})
+
+
+# ============ 统计接口（需登录）============
+@app.get("/api/stats/overview", dependencies=[Depends(verify_token)])
+def stats_overview_api(db: Session = Depends(get_db)):
+    """首页仪表盘与统计页共用的聚合数据"""
+    return stats.overview(db)
+
+
+# ============ 对话接口（需登录；每次调用写入统计埋点）============
+@app.post("/api/chat", response_model=ChatResponse, dependencies=[Depends(verify_token)])
 def chat_api(req: ChatRequest, db: Session = Depends(get_db)):
     """多轮对话：取历史 → 带历史调模型 → 结果落库"""
+    t0 = time.time()
     try:
         history = memory.get_history(db, req.session_id)       # 1. 取历史
         reply = chat(req.message, history)                     # 2. 带历史问大模型
-        memory.append(db, req.session_id, req.message, reply)  # 3. 本轮写入数据库
+        duration = int((time.time() - t0) * 1000)
+        memory.append(db, req.session_id, req.message, reply,
+                      route="chat", duration_ms=duration)      # 3. 落库 + 埋点
         return ChatResponse(code=0, message="success", data={"reply": reply})
     except Exception as e:
         logger.error(f"/api/chat 异常: {e}")
@@ -131,15 +235,18 @@ def chat_api(req: ChatRequest, db: Session = Depends(get_db)):
         return ChatResponse(code=500, message=f"AI 服务异常：{str(e)}", data={"reply": ""})
 
 
-@app.post("/api/agent/chat", response_model=ChatResponse)
+@app.post("/api/agent/chat", response_model=ChatResponse, dependencies=[Depends(verify_token)])
 def agent_chat_api(req: ChatRequest, db: Session = Depends(get_db)):
     """智能体对话：工具调用 + 记忆持久化，结果同步写入业务库供前端展示"""
+    t0 = time.time()
     try:
         result = agent_chat(req.message, req.session_id)
-        # 双写：工具调用记录拼进回复一起落库（刷新页面也能看到）
         tools = result["tools_used"]
+        duration = int((time.time() - t0) * 1000)
+        # 双写：工具调用记录拼进回复一起落库（刷新页面也能看到）
         record = (f"🔧 [调用工具：{'、'.join(tools)}]\n\n" + result["reply"]) if tools else result["reply"]
-        memory.append(db, req.session_id, req.message, record)
+        memory.append(db, req.session_id, req.message, record,
+                      route="agent", tools=tools, duration_ms=duration)
         return ChatResponse(code=0, message="success", data={
             "reply": result["reply"],
             "tools_used": tools,   # 返回工具记录，前端实时展示
@@ -149,29 +256,34 @@ def agent_chat_api(req: ChatRequest, db: Session = Depends(get_db)):
         return ChatResponse(code=500, message=f"智能体服务异常：{str(e)}", data={"reply": ""})
 
 
-@app.post("/api/smart/chat", response_model=ChatResponse)
+@app.post("/api/smart/chat", response_model=ChatResponse, dependencies=[Depends(verify_token)])
 def smart_chat_api(req: ChatRequest, db: Session = Depends(get_db)):
     """统一入口：先意图识别，再自动路由到普通对话或智能体"""
+    t0 = time.time()
     try:
         intent = classify_intent(req.message)
         if intent == "agent":
             result = agent_chat(req.message, req.session_id)
             tools = result["tools_used"]
+            duration = int((time.time() - t0) * 1000)
             record = (f"🔧 [调用工具：{'、'.join(tools)}]\n\n" + result["reply"]) if tools else result["reply"]
-            memory.append(db, req.session_id, req.message, record)
+            memory.append(db, req.session_id, req.message, record,
+                          route="agent", tools=tools, duration_ms=duration)
             return ChatResponse(code=0, message="success", data={
                 "route": "agent", "reply": result["reply"], "tools_used": tools,
             })
         history = memory.get_history(db, req.session_id)
         reply = chat(req.message, history)
-        memory.append(db, req.session_id, req.message, reply)
+        duration = int((time.time() - t0) * 1000)
+        memory.append(db, req.session_id, req.message, reply,
+                      route="chat", duration_ms=duration)
         return ChatResponse(code=0, message="success", data={"route": "chat", "reply": reply})
     except Exception as e:
         logger.error(f"/api/smart/chat 异常: {e}")
         return ChatResponse(code=500, message=f"服务异常：{str(e)}", data={"reply": ""})
 
 
-@app.post("/api/chat/stream")
+@app.post("/api/chat/stream", dependencies=[Depends(verify_token)])
 async def chat_stream_api(req: ChatRequest, db: Session = Depends(get_db)):
     """流式对话接口（SSE）：逐字推送 AI 回复"""
     messages = [SystemMessage(content=SYSTEM_PROMPT)]
@@ -180,13 +292,16 @@ async def chat_stream_api(req: ChatRequest, db: Session = Depends(get_db)):
 
     async def event_generator():
         full_reply = ""
+        t0 = time.time()
         try:
             async for chunk in llm.astream(messages):     # 异步流式接收
                 if chunk.content:
                     full_reply += chunk.content
                     # SSE 格式：data: xxx\n\n（json.dumps 防止内容含换行破坏格式）
                     yield f"data: {json.dumps({'delta': chunk.content}, ensure_ascii=False)}\n\n"
-            memory.append(db, req.session_id, req.message, full_reply)   # 完整回复落库
+            duration = int((time.time() - t0) * 1000)
+            memory.append(db, req.session_id, req.message, full_reply,
+                          route="chat", duration_ms=duration)   # 完整回复落库 + 埋点
             yield "data: [DONE]\n\n"
         except Exception as e:
             yield f"data: {json.dumps({'error': str(e)}, ensure_ascii=False)}\n\n"

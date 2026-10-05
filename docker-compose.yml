@@ -1,0 +1,20 @@
+services:
+  backend:
+    build: ./backend
+    container_name: smart-chat-backend
+    env_file:
+      - ./backend/.env        # API Key 注入容器，不进镜像
+    expose:
+      - "8000"                # 只对容器网络内部开放（比 ports 更安全）
+    volumes:
+      - ./backend/data:/app/data   # 数据卷：SQLite 数据持久化到宿主机
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: smart-chat-frontend
+    ports:
+      - "8080:80"             # 宿主机 8080 -> 容器 80
+    depends_on:
+      - backend               # 后端先启动
+    restart: unless-stopped

@@ -1,0 +1,207 @@
+ Image smart-chat-frontend Building 
+ Image smart-chat-backend Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 937B 0.0s done
+#1 DONE 0.0s
+
+#2 [backend internal] load build definition from Dockerfile
+#2 transferring dockerfile: 737B done
+#2 DONE 0.0s
+
+#3 [frontend internal] load build definition from Dockerfile
+#3 transferring dockerfile: 542B done
+#3 DONE 0.0s
+
+#4 [frontend internal] load metadata for docker.io/library/nginx:alpine
+#4 ...
+
+#5 [frontend internal] load metadata for docker.io/library/node:20-alpine
+#5 DONE 0.9s
+
+#6 [backend internal] load metadata for docker.io/library/python:3.11-slim
+#6 ...
+
+#4 [frontend internal] load metadata for docker.io/library/nginx:alpine
+#4 DONE 16.2s
+
+#7 [frontend internal] load .dockerignore
+#7 transferring context: 58B done
+#7 DONE 0.0s
+
+#8 [frontend internal] load build context
+#8 transferring context: 75.20kB done
+#8 DONE 0.1s
+
+#9 [frontend build 1/6] FROM docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
+#9 resolve docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 0.0s done
+#9 CACHED
+
+#10 [frontend build 2/6] WORKDIR /app
+#10 DONE 0.1s
+
+#11 [frontend build 3/6] COPY package*.json ./
+#11 DONE 0.1s
+
+#12 [frontend stage-1 1/3] FROM docker.io/library/nginx:alpine@sha256:df221db836e1754089190208cee7eeda94f233197056426eda74a43ab1abeac2
+#12 resolve docker.io/library/nginx:alpine@sha256:df221db836e1754089190208cee7eeda94f233197056426eda74a43ab1abeac2 0.0s done
+#12 sha256:e72112c14215406dc7f23ef8e5cfdfddeb8662176167382ad64ec86f52b7a88e 0B / 20.53MB 0.2s
+#12 sha256:e76228b47809e8a4bd37a6ba52a04d282d8c72ddf0ff9e8b83fd6318631abd52 0B / 1.40kB 0.2s
+#12 sha256:64c8194480fee2c03e01cc561cf5542733627d2c7de493a028139677025f975c 0B / 1.21kB 0.2s
+#12 sha256:9a9a644fdd6a3681d43dace44c8cfef374cfd7b24f433113379ea483692498a8 0B / 404B 0.2s
+#12 sha256:e76228b47809e8a4bd37a6ba52a04d282d8c72ddf0ff9e8b83fd6318631abd52 1.40kB / 1.40kB 1.8s done
+#12 sha256:9a9a644fdd6a3681d43dace44c8cfef374cfd7b24f433113379ea483692498a8 404B / 404B 1.8s done
+#12 sha256:64c8194480fee2c03e01cc561cf5542733627d2c7de493a028139677025f975c 1.21kB / 1.21kB 2.0s done
+#12 sha256:6c53d0b2a666ed8f8fad8d9982e30cf24eb085036c17b27591665ca25e1ba40c 0B / 629B 0.2s
+#12 sha256:745dfb2690dd8627e1593941caccc756f14943df7930a478beb4e808c5695cb9 0B / 965B 0.3s
+#12 sha256:d9aae54b58315e84b9c3ac5f00bad6610e0e28ad9ff28fcde694647e0be13131 0B / 1.93MB 0.2s
+#12 sha256:6c53d0b2a666ed8f8fad8d9982e30cf24eb085036c17b27591665ca25e1ba40c 629B / 629B 1.2s done
+#12 sha256:e2de96513ba9eb53b431787ec8a65cdde380ac4772a3e4c4b714dcfde2a102b5 0B / 3.85MB 0.2s
+#12 sha256:745dfb2690dd8627e1593941caccc756f14943df7930a478beb4e808c5695cb9 965B / 965B 2.3s
+#12 sha256:745dfb2690dd8627e1593941caccc756f14943df7930a478beb4e808c5695cb9 965B / 965B 2.4s done
+#12 sha256:e72112c14215406dc7f23ef8e5cfdfddeb8662176167382ad64ec86f52b7a88e 0B / 20.53MB 5.3s
+#12 sha256:d9aae54b58315e84b9c3ac5f00bad6610e0e28ad9ff28fcde694647e0be13131 1.05MB / 1.93MB 3.3s
+#12 sha256:e72112c14215406dc7f23ef8e5cfdfddeb8662176167382ad64ec86f52b7a88e 1.05MB / 20.53MB 5.9s
+#12 sha256:d9aae54b58315e84b9c3ac5f00bad6610e0e28ad9ff28fcde694647e0be13131 1.93MB / 1.93MB 3.9s
+#12 sha256:d9aae54b58315e84b9c3ac5f00bad6610e0e28ad9ff28fcde694647e0be13131 1.93MB / 1.93MB 4.1s done
+#12 sha256:e2de96513ba9eb53b431787ec8a65cdde380ac4772a3e4c4b714dcfde2a102b5 1.05MB / 3.85MB 3.3s
+#12 sha256:e2de96513ba9eb53b431787ec8a65cdde380ac4772a3e4c4b714dcfde2a102b5 2.10MB / 3.85MB 4.4s
+#12 sha256:e72112c14215406dc7f23ef8e5cfdfddeb8662176167382ad64ec86f52b7a88e 2.10MB / 20.53MB 7.7s
+#12 sha256:e2de96513ba9eb53b431787ec8a65cdde380ac4772a3e4c4b714dcfde2a102b5 3.15MB / 3.85MB 5.3s
+#12 ...
+
+#13 [frontend build 4/6] RUN npm install --registry=https://mirrors.cloud.tencent.com/npm/
+#13 1.135 npm warn EBADENGINE Unsupported engine {
+#13 1.135 npm warn EBADENGINE   package: '@vueuse/core@15.0.0',
+#13 1.135 npm warn EBADENGINE   required: { node: '>=22' },
+#13 1.135 npm warn EBADENGINE   current: { node: 'v20.20.2', npm: '10.8.2' }
+#13 1.135 npm warn EBADENGINE }
+#13 1.136 npm warn EBADENGINE Unsupported engine {
+#13 1.136 npm warn EBADENGINE   package: '@vueuse/metadata@15.0.0',
+#13 1.136 npm warn EBADENGINE   required: { node: '>=22' },
+#13 1.136 npm warn EBADENGINE   current: { node: 'v20.20.2', npm: '10.8.2' }
+#13 1.136 npm warn EBADENGINE }
+#13 1.136 npm warn EBADENGINE Unsupported engine {
+#13 1.136 npm warn EBADENGINE   package: '@vueuse/shared@15.0.0',
+#13 1.136 npm warn EBADENGINE   required: { node: '>=22' },
+#13 1.136 npm warn EBADENGINE   current: { node: 'v20.20.2', npm: '10.8.2' }
+#13 1.136 npm warn EBADENGINE }
+#13 6.820 
+#13 6.820 added 79 packages, and audited 80 packages in 6s
+#13 6.820 
+#13 6.820 14 packages are looking for funding
+#13 6.820   run `npm fund` for details
+#13 6.829 
+#13 6.829 2 vulnerabilities (1 moderate, 1 high)
+#13 6.829 
+#13 6.829 To address all issues (including breaking changes), run:
+#13 6.829   npm audit fix --force
+#13 6.829 
+#13 6.829 Run `npm audit` for details.
+#13 6.830 npm notice
+#13 6.830 npm notice New major version of npm available! 10.8.2 -> 12.2.0
+#13 6.830 npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+#13 6.830 npm notice To update run: npm install -g npm@12.2.0
+#13 6.830 npm notice
+#13 DONE 8.6s
+
+#14 [frontend build 5/6] COPY . .
+#14 DONE 0.1s
+
+#12 [frontend stage-1 1/3] FROM docker.io/library/nginx:alpine@sha256:df221db836e1754089190208cee7eeda94f233197056426eda74a43ab1abeac2
+#12 sha256:e2de96513ba9eb53b431787ec8a65cdde380ac4772a3e4c4b714dcfde2a102b5 3.85MB / 3.85MB 5.7s done
+#12 extracting sha256:e2de96513ba9eb53b431787ec8a65cdde380ac4772a3e4c4b714dcfde2a102b5 0.1s done
+#12 extracting sha256:d9aae54b58315e84b9c3ac5f00bad6610e0e28ad9ff28fcde694647e0be13131 0.1s done
+#12 extracting sha256:6c53d0b2a666ed8f8fad8d9982e30cf24eb085036c17b27591665ca25e1ba40c 0.0s done
+#12 extracting sha256:745dfb2690dd8627e1593941caccc756f14943df7930a478beb4e808c5695cb9 0.0s done
+#12 extracting sha256:9a9a644fdd6a3681d43dace44c8cfef374cfd7b24f433113379ea483692498a8 0.0s done
+#12 extracting sha256:64c8194480fee2c03e01cc561cf5542733627d2c7de493a028139677025f975c 0.0s done
+#12 extracting sha256:e76228b47809e8a4bd37a6ba52a04d282d8c72ddf0ff9e8b83fd6318631abd52 0.0s done
+#12 sha256:e72112c14215406dc7f23ef8e5cfdfddeb8662176167382ad64ec86f52b7a88e 3.15MB / 20.53MB 9.5s
+#12 sha256:e72112c14215406dc7f23ef8e5cfdfddeb8662176167382ad64ec86f52b7a88e 4.19MB / 20.53MB 11.1s
+#12 sha256:e72112c14215406dc7f23ef8e5cfdfddeb8662176167382ad64ec86f52b7a88e 5.24MB / 20.53MB 12.3s
+#12 sha256:e72112c14215406dc7f23ef8e5cfdfddeb8662176167382ad64ec86f52b7a88e 6.29MB / 20.53MB 13.5s
+#12 sha256:e72112c14215406dc7f23ef8e5cfdfddeb8662176167382ad64ec86f52b7a88e 7.34MB / 20.53MB 14.6s
+#12 sha256:e72112c14215406dc7f23ef8e5cfdfddeb8662176167382ad64ec86f52b7a88e 8.39MB / 20.53MB 15.3s
+#12 ...
+
+#15 [frontend build 6/6] RUN npm run build     # 产出 dist/ 目录
+#15 0.362 
+#15 0.362 > smart-chat-frontend@2.0.0 build
+#15 0.362 > vite build
+#15 0.362 
+#15 0.666 vite v5.4.21 building for production...
+#15 0.761 transforming...
+#15 6.010 ✓ 1649 modules transformed.
+#15 6.757 rendering chunks...
+#15 6.786 computing gzip size...
+#15 6.852 dist/index.html                     0.40 kB │ gzip:   0.31 kB
+#15 6.852 dist/assets/index-B3-xOeqQ.css    363.92 kB │ gzip:  48.78 kB
+#15 6.852 dist/assets/index-Cq-qwowv.js   1,080.65 kB │ gzip: 356.66 kB
+#15 6.854 
+#15 6.854 (!) Some chunks are larger than 500 kB after minification. Consider:
+#15 6.854 - Using dynamic import() to code-split the application
+#15 6.854 - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+#15 6.854 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+#15 6.854 ✓ built in 6.16s
+#15 DONE 7.0s
+
+#12 [frontend stage-1 1/3] FROM docker.io/library/nginx:alpine@sha256:df221db836e1754089190208cee7eeda94f233197056426eda74a43ab1abeac2
+#12 sha256:e72112c14215406dc7f23ef8e5cfdfddeb8662176167382ad64ec86f52b7a88e 9.44MB / 20.53MB 16.1s
+#12 sha256:e72112c14215406dc7f23ef8e5cfdfddeb8662176167382ad64ec86f52b7a88e 10.49MB / 20.53MB 16.7s
+#12 sha256:e72112c14215406dc7f23ef8e5cfdfddeb8662176167382ad64ec86f52b7a88e 11.53MB / 20.53MB 17.3s
+#12 sha256:e72112c14215406dc7f23ef8e5cfdfddeb8662176167382ad64ec86f52b7a88e 12.58MB / 20.53MB 17.9s
+#12 sha256:e72112c14215406dc7f23ef8e5cfdfddeb8662176167382ad64ec86f52b7a88e 13.63MB / 20.53MB 18.3s
+#12 sha256:e72112c14215406dc7f23ef8e5cfdfddeb8662176167382ad64ec86f52b7a88e 14.68MB / 20.53MB 18.9s
+#12 sha256:e72112c14215406dc7f23ef8e5cfdfddeb8662176167382ad64ec86f52b7a88e 15.73MB / 20.53MB 19.5s
+#12 sha256:e72112c14215406dc7f23ef8e5cfdfddeb8662176167382ad64ec86f52b7a88e 16.78MB / 20.53MB 19.7s
+#12 sha256:e72112c14215406dc7f23ef8e5cfdfddeb8662176167382ad64ec86f52b7a88e 17.83MB / 20.53MB 20.1s
+#12 sha256:e72112c14215406dc7f23ef8e5cfdfddeb8662176167382ad64ec86f52b7a88e 18.87MB / 20.53MB 20.4s
+#12 sha256:e72112c14215406dc7f23ef8e5cfdfddeb8662176167382ad64ec86f52b7a88e 19.92MB / 20.53MB 20.7s
+#12 sha256:e72112c14215406dc7f23ef8e5cfdfddeb8662176167382ad64ec86f52b7a88e 20.53MB / 20.53MB 20.9s done
+#12 extracting sha256:e72112c14215406dc7f23ef8e5cfdfddeb8662176167382ad64ec86f52b7a88e
+#12 extracting sha256:e72112c14215406dc7f23ef8e5cfdfddeb8662176167382ad64ec86f52b7a88e 0.4s done
+#12 DONE 21.6s
+
+#6 [backend internal] load metadata for docker.io/library/python:3.11-slim
+#6 ...
+
+#16 [frontend stage-1 2/3] COPY --from=build /app/dist /usr/share/nginx/html
+#16 DONE 0.1s
+
+#17 [frontend stage-1 3/3] COPY nginx.conf /etc/nginx/conf.d/default.conf
+#17 DONE 0.0s
+
+#18 [frontend] exporting to image
+#18 exporting layers 0.1s done
+#18 exporting manifest sha256:2a20798078f6d7b4ebc7758d7f6efb189c8084b16b39165f3812f37b86a22f76 0.0s done
+#18 exporting config sha256:aceb56009ffe595b8aa84ac4530512ab4b8392532dccfedbd8baeb66a32b97c2 0.0s done
+#18 exporting attestation manifest sha256:7fbe59109db9b5cac76ac0d498e93506149f36c324239e68fdda4a088b53607d 0.0s done
+#18 exporting manifest list sha256:8dfe178ec985ef83f7ff59de355ac0c0425d8da6ce9df7b19335b1f591c4adab 0.0s done
+#18 naming to docker.io/library/smart-chat-frontend:latest done
+#18 unpacking to docker.io/library/smart-chat-frontend:latest 0.0s done
+#18 DONE 0.3s
+
+#19 [frontend] resolving provenance for metadata file
+#19 DONE 0.0s
+
+#6 [backend internal] load metadata for docker.io/library/python:3.11-slim
+#6 ERROR: short read: expected 5485 bytes but got 0: unexpected EOF
+------
+ > [backend internal] load metadata for docker.io/library/python:3.11-slim:
+------
+Dockerfile:2
+
+--------------------
+
+   1 |     # 基础镜像：官方 Python 3.11 精简版（约 120MB）
+
+   2 | >>> FROM python:3.11-slim
+
+   3 |     
+
+   4 |     WORKDIR /app
+
+--------------------
+
+target backend: failed to solve: python:3.11-slim: failed to resolve source metadata for docker.io/library/python:3.11-slim: short read: expected 5485 bytes but got 0: unexpected EOF
+

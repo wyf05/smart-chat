@@ -190,7 +190,10 @@ onMounted(() => { loadOrders(); loadCoupons() })
 
 <style scoped>
 .page { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
-.page-title { margin: 0 0 6px; }
-.page-desc { color: #909399; font-size: 13px; margin: 0 0 16px; }
+.page-title {
+  margin: 0 0 6px; color: var(--sk-ink);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+.page-desc { color: var(--sk-ink-2); font-size: 13px; margin: 0 0 16px; }
 .toolbar { margin-bottom: 12px; display: flex; gap: 10px; }
 </style>

@@ -68,9 +68,13 @@ async function handleDelete(id) {
 </template>
 
 <style scoped>
-.chat-layout { display: flex; height: calc(100vh - 56px); }
+.chat-layout {
+  display: flex; height: calc(100vh - 56px);
+  background: linear-gradient(180deg, var(--sk-bg-from), var(--sk-bg-to));
+}
 .no-session {
   flex: 1; display: flex; align-items: center; justify-content: center;
-  color: #909399; font-size: 15px;
+  color: var(--sk-ink-2); font-size: 15px;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 </style>

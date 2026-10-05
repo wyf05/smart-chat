@@ -127,9 +127,15 @@ onMounted(load)
 
 <style scoped>
 .page { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
-.page-title { margin: 0 0 6px; }
-.page-desc { color: #909399; font-size: 13px; margin: 0 0 16px; }
-.page-desc code { background: #eef1f6; padding: 1px 6px; border-radius: 4px; }
+.page-title {
+  margin: 0 0 6px; color: var(--sk-ink);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+.page-desc { color: var(--sk-ink-2); font-size: 13px; margin: 0 0 16px; }
+.page-desc code {
+  background: rgba(139, 115, 85, 0.15); color: var(--sk-leather-deep);
+  padding: 1px 6px; border-radius: 4px; border: 1px solid rgba(168, 152, 128, 0.5);
+}
 .test-box { display: flex; gap: 10px; margin-bottom: 12px; }
 .test-input { flex: 1; }
 .test-result { margin-bottom: 16px; white-space: pre-wrap; }

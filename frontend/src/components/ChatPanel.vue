@@ -157,29 +157,56 @@ async function scrollToBottom() {
 </template>
 
 <style scoped>
-.chat-panel { flex: 1; display: flex; flex-direction: column; background: #f5f7fa; min-width: 0; }
+/* 拟物：纸面聊天区，纸片气泡（助手）/ 皮革气泡（用户） */
+.chat-panel {
+  flex: 1; display: flex; flex-direction: column; min-width: 0;
+  background-image: var(--sk-noise), linear-gradient(180deg, var(--sk-bg-from), var(--sk-bg-to));
+}
 .chat-header {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 12px 20px; background: #fff; border-bottom: 1px solid #e4e7ed;
+  padding: 12px 20px;
+  background-image: var(--sk-noise), linear-gradient(180deg, #f0e9da, #e5dac2);
+  border-bottom: 1px solid var(--sk-border);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
-.chat-header .title { font-size: 14px; color: #606266; font-weight: bold; }
+.chat-header .title {
+  font-size: 14px; color: var(--sk-ink); font-weight: bold;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
+}
 .header-right { display: flex; align-items: center; gap: 16px; }
 .agent-toggle { display: flex; align-items: center; gap: 6px; }
-.agent-label { font-size: 13px; }
+.agent-label { font-size: 13px; color: var(--sk-ink-2); font-weight: 600; }
 .chat-body { flex: 1; overflow-y: auto; padding: 20px; }
 .msg-row { display: flex; margin-bottom: 16px; align-items: flex-start; }
 .msg-row.user { flex-direction: row-reverse; }
-.avatar { font-size: 28px; margin: 0 10px; flex-shrink: 0; }
+.avatar { font-size: 28px; margin: 0 10px; flex-shrink: 0; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.2)); }
 .bubble {
   max-width: 70%; padding: 10px 14px; border-radius: 10px;
   line-height: 1.6; white-space: pre-wrap; word-break: break-word;
+  color: var(--sk-ink);
 }
-.msg-row.assistant .bubble { background: #fff; border: 1px solid #e4e7ed; border-top-left-radius: 2px; }
-.msg-row.user .bubble { background: #409eff; color: #fff; border-top-right-radius: 2px; }
-.loading-bubble { color: #909399; }
+/* 助手：纸片 */
+.msg-row.assistant .bubble {
+  background-image: var(--sk-noise), linear-gradient(180deg, #faf5ea, #efe6d2);
+  border: 1px solid var(--sk-border);
+  border-top-left-radius: 2px;
+  box-shadow: var(--sk-shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+/* 用户：皮革块 */
+.msg-row.user .bubble {
+  color: #fff;
+  background-image: var(--sk-noise), linear-gradient(180deg, var(--sk-sand), var(--sk-leather));
+  border: 1px solid #7a684c;
+  border-top-right-radius: 2px;
+  box-shadow: var(--sk-shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+}
+.loading-bubble { color: var(--sk-ink-3); }
 .chat-footer {
   display: flex; gap: 10px; padding: 12px 20px;
-  background: #fff; border-top: 1px solid #e4e7ed;
+  background-image: var(--sk-noise), linear-gradient(180deg, #f0e9da, #e5dac2);
+  border-top: 1px solid var(--sk-border);
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.06);
 }
 .chat-footer .el-textarea { flex: 1; }
 .send-btn { height: auto; }

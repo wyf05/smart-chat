@@ -1,10 +1,13 @@
 """智能体模块：LangChain 实现带工具调用与持久记忆的客服智能体
 
-工具的数据来源是业务数据库（orders/coupons/knowledge 表），
-在"业务数据中心"页面修改数据后，智能体的回答会同步变化。
+工具的数据来源：订单/优惠券/知识库来自业务数据库（orders/coupons/knowledge 表），
+天气来自高德开放平台实时 API。在"业务数据中心"页面修改数据后，
+智能体的回答会同步变化。
 """
 import sqlite3
 from datetime import datetime
+
+import requests
 
 from langchain.agents import create_agent
 from langchain.tools import tool
@@ -13,7 +16,8 @@ from langgraph.checkpoint.sqlite import SqliteSaver
 
 from app.catalog import (query_coupon_by_code, query_order_by_id,
                          search_knowledge as search_knowledge_db)
-from app.config import AGENT_DB_PATH, AGENT_MODEL, API_KEY, BASE_URL
+from app.config import (AGENT_DB_PATH, AGENT_MODEL, AMAP_KEY, API_KEY,
+                        BASE_URL)
 from app.database import SessionLocal
 
 
@@ -30,16 +34,40 @@ def query_order(order_id: str) -> str:
 
 @tool
 def get_weather(city: str) -> str:
-    """查询指定中国城市今天的天气。参数 city 是城市名，如"长沙"。
+    """查询指定中国城市当前的实时天气。参数 city 是城市名，如"长沙"。
     用户询问天气、是否适合发货/出行时使用本工具。"""
-    fake_data = {
-        "长沙": "晴，25℃，微风，适合户外活动",
-        "北京": "多云，18℃，早晚温差大",
-        "上海": "小雨，22℃，出门记得带伞",
-        "广州": "晴间多云，28℃，湿度较高",
-        "深圳": "阵雨，26℃，注意防雨",
-    }
-    return fake_data.get(city, f"{city}：晴，24℃（模拟数据）")
+    if not AMAP_KEY:
+        return "天气服务未配置：请在 backend/.env 的 AMAP_KEY 中填入高德开放平台的 Key（Web服务类型）"
+    try:
+        # 高德天气接口只认 adcode（6 位行政区划码），先用地理解码把城市名换成 adcode
+        geo = requests.get(
+            "https://restapi.amap.com/v3/geocode/geo",
+            params={"key": AMAP_KEY, "address": city},
+            timeout=5,
+        ).json()
+        geocodes = geo.get("geocodes") or []
+        if geo.get("status") != "1" or not geocodes:
+            if geo.get("info") in ("INVALID_USER_KEY", "USERKEY_PLAT_NOMATCH"):
+                # Key 无效或不是 Web 服务类型时，geocode 这一步就会失败
+                return f"天气查询失败：{geo.get('info')}（请检查 AMAP_KEY 是否为高德「Web服务」类型的 Key）"
+            return f"没有找到城市「{city}」，请确认城市名（如：长沙、上海）"
+        adcode = geocodes[0]["adcode"]
+        # 再查实时天气（extensions=base 为实况，forecast 为预报）
+        data = requests.get(
+            "https://restapi.amap.com/v3/weather/weatherInfo",
+            params={"key": AMAP_KEY, "city": adcode, "extensions": "base"},
+            timeout=5,
+        ).json()
+        lives = data.get("lives") or []
+        if data.get("status") != "1" or not lives:
+            # Key 类型错误/配额用尽等情况，高德会在 info 里给原因
+            return f"天气查询失败：{data.get('info', '接口返回异常')}（请检查 AMAP_KEY 是否为 Web 服务类型）"
+        w = lives[0]
+        return (f"{w['city']}当前天气：{w['weather']}，气温 {w['temperature']}℃，"
+                f"{w['winddirection']}风 {w['windpower']} 级，湿度 {w['humidity']}%"
+                f"（数据来源：高德开放平台，更新于 {w['reporttime']}）")
+    except requests.RequestException as e:
+        return f"天气查询网络异常：{e}"
 
 
 @tool

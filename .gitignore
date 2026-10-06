@@ -9,6 +9,7 @@ backend/.env
 
 # ===== 运行时数据（数据库文件）=====
 backend/data/
+data/
 
 # ===== Node =====
 node_modules/

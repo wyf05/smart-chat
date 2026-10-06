@@ -7,6 +7,8 @@ load_dotenv()   # 读取 backend/.env，把配置装进环境变量
 
 API_KEY: str = os.getenv("LLM_API_KEY", "")
 BASE_URL: str = os.getenv("LLM_BASE_URL", "https://open.bigmodel.cn/api/paas/v4")
+# 高德开放平台"Web服务"类型 Key：天气工具用，未配置时天气工具降级为提示语
+AMAP_KEY: str = os.getenv("AMAP_KEY", "")
 MODEL: str = os.getenv("LLM_MODEL", "glm-4-flash")
 # 智能体单独用一个小模型：glm-4-flash 工具链路正常但多轮记忆召回弱，
 # glm-4.5-flash（同免费）在"查完订单再追问订单号"类问题上召回正确

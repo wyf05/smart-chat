@@ -95,7 +95,7 @@ onMounted(() => { loadOrders(); loadCoupons() })
         <div class="toolbar">
           <el-button type="primary" :icon="Plus" @click="openOrder(null)">新增订单</el-button>
         </div>
-        <el-table :data="orders" border>
+        <el-table :data="orders">
           <el-table-column prop="order_id" label="订单号" width="130" />
           <el-table-column prop="status" label="状态" width="100">
             <template #default="{ row }">
@@ -122,7 +122,7 @@ onMounted(() => { loadOrders(); loadCoupons() })
         <div class="toolbar">
           <el-button type="primary" :icon="Plus" @click="openCoupon(null)">新增优惠券</el-button>
         </div>
-        <el-table :data="coupons" border>
+        <el-table :data="coupons">
           <el-table-column prop="code" label="券码" width="120" />
           <el-table-column prop="title" label="名称" width="150" />
           <el-table-column prop="discount" label="优惠说明" min-width="180" />
@@ -150,7 +150,7 @@ onMounted(() => { loadOrders(); loadCoupons() })
     <el-dialog v-model="orderDialog" :title="orderForm.__edit ? '编辑订单' : '新增订单'" width="480px">
       <el-form label-width="80px">
         <el-form-item label="订单号">
-          <el-input v-model="orderForm.order_id" :disabled="!!orderForm.__edit" placeholder="如 DD20240005" />
+          <el-input v-model="orderForm.order_id" :disabled="!!orderForm.__edit" placeholder="如 DD20260005" />
         </el-form-item>
         <el-form-item label="状态">
           <el-select v-model="orderForm.status">
@@ -191,9 +191,11 @@ onMounted(() => { loadOrders(); loadCoupons() })
 <style scoped>
 .page { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
 .page-title {
-  margin: 0 0 6px; color: var(--sk-ink);
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+  font-family: var(--sk-font-display);
+  font-weight: 900; font-size: 24px;
+  margin: 0 0 8px; color: var(--sk-ink);
+  text-shadow: 0 2px 0 rgba(255, 255, 255, 0.45), 0 4px 12px rgba(0, 0, 0, 0.12);
 }
-.page-desc { color: var(--sk-ink-2); font-size: 13px; margin: 0 0 16px; }
+.page-desc { color: var(--sk-body); font-size: 13px; margin: 0 0 16px; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4); }
 .toolbar { margin-bottom: 12px; display: flex; gap: 10px; }
 </style>

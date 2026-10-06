@@ -36,7 +36,7 @@ def query_order_by_id(db: Session, order_id: str) -> str:
     """供智能体 query_order 工具调用：返回自然语言描述"""
     order = db.get(Order, order_id.strip().upper())
     if not order:
-        return f"未找到订单 {order_id}，请核对订单号（示例：DD20240001）"
+        return f"未找到订单 {order_id}，请核对订单号（示例：DD20260001）"
     parts = [f"订单 {order.order_id} 状态：{order.status}，金额 {order.amount} 元，收件人 {order.receiver}"]
     if order.logistics:
         parts.append(f"物流信息：{order.logistics}")

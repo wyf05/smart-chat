@@ -33,14 +33,20 @@ def _seed(db) -> None:
 
     if db.query(Order).count() == 0:
         db.add_all([
-            Order(order_id="DD20240001", status="已发货", amount="199.00",
+            Order(order_id="DD20260001", status="已发货", amount="199.00",
                   receiver="张先生", logistics="顺丰速运，预计明天 18:00 前送达"),
-            Order(order_id="DD20240002", status="待付款", amount="129.00",
+            Order(order_id="DD20260002", status="待付款", amount="129.00",
                   receiver="李女士", logistics="30 分钟内未支付将自动取消"),
-            Order(order_id="DD20240003", status="已签收", amount="89.00",
+            Order(order_id="DD20260003", status="已签收", amount="89.00",
                   receiver="王先生", logistics="2026-09-18 14:32 签收"),
-            Order(order_id="DD20240004", status="打包中", amount="259.00",
+            Order(order_id="DD20260004", status="打包中", amount="259.00",
                   receiver="赵女士", logistics="预计今天 20:00 前发出"),
+            Order(order_id="DD20260005", status="已发货", amount="329.00",
+                  receiver="王一帆", logistics="顺丰速运，预计明天 15:00 前送达"),
+            Order(order_id="DD20260006", status="待付款", amount="159.00",
+                  receiver="王一帆", logistics="30 分钟内未支付将自动取消"),
+            Order(order_id="DD20260007", status="已签收", amount="459.00",
+                  receiver="王一帆", logistics="2026-09-30 11:20 签收"),
         ])
     if db.query(Coupon).count() == 0:
         db.add_all([

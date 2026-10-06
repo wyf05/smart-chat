@@ -157,25 +157,25 @@ async function scrollToBottom() {
 </template>
 
 <style scoped>
-/* 拟物：纸面聊天区，纸片气泡（助手）/ 皮革气泡（用户） */
+/* 拟物 v2：纸面聊天区；助手气泡=纸片，用户气泡=蓝色光泽块 */
 .chat-panel {
   flex: 1; display: flex; flex-direction: column; min-width: 0;
-  background-image: var(--sk-noise), linear-gradient(180deg, var(--sk-bg-from), var(--sk-bg-to));
+  background: linear-gradient(180deg, #d4c4a8 0%, #c8b898 55%, #b8a888 100%);
 }
 .chat-header {
   display: flex; justify-content: space-between; align-items: center;
   padding: 12px 20px;
-  background-image: var(--sk-noise), linear-gradient(180deg, #f0e9da, #e5dac2);
-  border-bottom: 1px solid var(--sk-border);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  background-image: linear-gradient(180deg, var(--sk-nav-hi), var(--sk-nav-lo));
+  border-bottom: 2px solid var(--sk-nav-border);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 .chat-header .title {
-  font-size: 14px; color: var(--sk-ink); font-weight: bold;
+  font-size: 14px; color: var(--sk-leather-deep); font-weight: 700;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 .header-right { display: flex; align-items: center; gap: 16px; }
 .agent-toggle { display: flex; align-items: center; gap: 6px; }
-.agent-label { font-size: 13px; color: var(--sk-ink-2); font-weight: 600; }
+.agent-label { font-size: 13px; color: var(--sk-leather-deep); font-weight: 600; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45); }
 .chat-body { flex: 1; overflow-y: auto; padding: 20px; }
 .msg-row { display: flex; margin-bottom: 16px; align-items: flex-start; }
 .msg-row.user { flex-direction: row-reverse; }
@@ -187,26 +187,26 @@ async function scrollToBottom() {
 }
 /* 助手：纸片 */
 .msg-row.assistant .bubble {
-  background-image: var(--sk-noise), linear-gradient(180deg, #faf5ea, #efe6d2);
-  border: 1px solid var(--sk-border);
+  background-image: linear-gradient(180deg, var(--sk-paper-hi), var(--sk-paper-lo));
+  border: 1px solid var(--sk-paper-border);
   border-top-left-radius: 2px;
-  box-shadow: var(--sk-shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
-/* 用户：皮革块 */
+/* 用户：蓝色光泽块（与主按钮同款材质） */
 .msg-row.user .bubble {
   color: #fff;
-  background-image: var(--sk-noise), linear-gradient(180deg, var(--sk-sand), var(--sk-leather));
-  border: 1px solid #7a684c;
+  background-image: linear-gradient(180deg, var(--sk-blue-hi) 0%, var(--sk-blue-mid) 50%, var(--sk-blue-lo) 100%);
+  border: 1px solid var(--sk-blue-border);
   border-top-right-radius: 2px;
-  box-shadow: var(--sk-shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3), inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
 }
-.loading-bubble { color: var(--sk-ink-3); }
+.loading-bubble { color: var(--sk-label); }
 .chat-footer {
   display: flex; gap: 10px; padding: 12px 20px;
-  background-image: var(--sk-noise), linear-gradient(180deg, #f0e9da, #e5dac2);
-  border-top: 1px solid var(--sk-border);
-  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.06);
+  background-image: linear-gradient(180deg, var(--sk-nav-hi), var(--sk-nav-lo));
+  border-top: 2px solid var(--sk-nav-border);
+  box-shadow: 0 -3px 8px rgba(0, 0, 0, 0.12);
 }
 .chat-footer .el-textarea { flex: 1; }
 .send-btn { height: auto; }

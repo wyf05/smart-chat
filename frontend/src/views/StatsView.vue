@@ -7,32 +7,33 @@ import { getStatsOverview } from '../api/index.js'
 const s = ref(null)
 
 function initCharts(data) {
-  // 拟物配色：皮革棕 / 深皮革 / 浅木 / 橄榄绿，统一深墨文字
-  const INK = '#3a2f22'
-  const titleStyle = { fontSize: 14, color: INK, fontWeight: 'bold' }
+  // 拟物 v2 配色（showcase 色板）：光泽蓝 / 皮革棕 / 黄铜金，墨色文字
+  const INK = '#3d2010'
+  const BODY = '#6b4f35'
+  const titleStyle = { fontSize: 14, color: INK, fontWeight: 'bold', fontFamily: '"Playfair Display", Georgia, "STZhongsong", "SimSun", serif' }
 
-  // 工具调用分布（柱状图）
+  // 工具调用分布（柱状图，光泽蓝三段渐变）
   const toolEl = document.getElementById('chart-tools')
   const tools = Object.entries(data.tool_counter || {})
   echarts.init(toolEl).setOption({
     title: { text: '工具调用分布', left: 'center', textStyle: titleStyle },
     tooltip: {},
     grid: { left: 40, right: 20, bottom: 30, top: 40 },
-    xAxis: { type: 'category', data: tools.map(([k]) => k), axisLabel: { color: INK } },
-    yAxis: { type: 'value', minInterval: 1, axisLabel: { color: INK } },
+    xAxis: { type: 'category', data: tools.map(([k]) => k), axisLabel: { color: BODY } },
+    yAxis: { type: 'value', minInterval: 1, axisLabel: { color: BODY } },
     series: [{
-      type: 'bar', data: tools.map(([, v]) => v),
+      type: 'bar', data: tools.map(([, v]) => v), barMaxWidth: 46,
       itemStyle: {
-        borderRadius: [4, 4, 0, 0],
-        // 柱体做出顶部受光的立体感
+        borderRadius: [6, 6, 0, 0],
+        // 顶部受光的光泽柱体
         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-          { offset: 0, color: '#b8a88a' }, { offset: 1, color: '#8b7355' },
+          { offset: 0, color: '#5b9bd5' }, { offset: 0.5, color: '#3a7fc1' }, { offset: 1, color: '#2860a0' },
         ]),
       },
     }],
   })
 
-  // 意图路由占比（饼图）
+  // 意图路由占比（饼图：皮革 + 黄铜）
   const routeEl = document.getElementById('chart-route')
   const rc = data.route_counter || { chat: 0, agent: 0 }
   echarts.init(routeEl).setOption({
@@ -40,23 +41,23 @@ function initCharts(data) {
     tooltip: { trigger: 'item' },
     series: [{
       type: 'pie', radius: ['38%', '65%'],
-      data: [{ name: '普通对话 chat', value: rc.chat || 0, itemStyle: { color: '#6b5b45' } },
-             { name: '智能体 agent', value: rc.agent || 0, itemStyle: { color: '#c9b896' } }],
-      label: { formatter: '{b}: {c}', color: INK },
+      data: [{ name: '普通对话 chat', value: rc.chat || 0, itemStyle: { color: '#8b7355' } },
+             { name: '智能体 agent', value: rc.agent || 0, itemStyle: { color: '#c9a227' } }],
+      label: { formatter: '{b}: {c}', color: BODY },
     }],
   })
 
-  // 近 7 日消息量（折线图）
+  // 近 7 日消息量（折线图，黄铜金）
   const dailyEl = document.getElementById('chart-daily')
   echarts.init(dailyEl).setOption({
     title: { text: '近 7 日用户消息量', left: 'center', textStyle: titleStyle },
     tooltip: { trigger: 'axis' },
     grid: { left: 40, right: 20, bottom: 30, top: 40 },
-    xAxis: { type: 'category', data: data.daily.days, axisLabel: { color: INK } },
-    yAxis: { type: 'value', minInterval: 1, axisLabel: { color: INK } },
+    xAxis: { type: 'category', data: data.daily.days, axisLabel: { color: BODY } },
+    yAxis: { type: 'value', minInterval: 1, axisLabel: { color: BODY } },
     series: [{ type: 'line', data: data.daily.counts, smooth: true,
-               lineStyle: { color: '#6e7a3f', width: 3 },
-               areaStyle: { opacity: 0.2, color: '#a8b07a' }, itemStyle: { color: '#6e7a3f' } }],
+               lineStyle: { color: '#a07818', width: 3 },
+               areaStyle: { opacity: 0.25, color: '#c9a227' }, itemStyle: { color: '#a07818' } }],
   })
 }
 
@@ -96,28 +97,32 @@ onMounted(async () => {
 <style scoped>
 .page { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
 .page-title {
-  margin: 0 0 6px; color: var(--sk-ink);
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+  font-family: var(--sk-font-display);
+  font-weight: 900; font-size: 24px;
+  margin: 0 0 8px; color: var(--sk-ink);
+  text-shadow: 0 2px 0 rgba(255, 255, 255, 0.45), 0 4px 12px rgba(0, 0, 0, 0.12);
 }
-.page-desc { color: var(--sk-ink-2); font-size: 13px; margin: 0 0 16px; }
+.page-desc { color: var(--sk-body); font-size: 13px; margin: 0 0 16px; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4); }
 .kpi-row { display: flex; gap: 20px; margin-bottom: 20px; }
 .kpi {
-  flex: 1; border-radius: 10px; padding: 14px; text-align: center;
-  background-image: var(--sk-noise), linear-gradient(180deg, var(--sk-bg-from), var(--sk-bg-to));
-  border: 1px solid var(--sk-border);
-  box-shadow: var(--sk-shadow-md), var(--sk-top-light), var(--sk-bottom-dark);
-  font-size: 13px; color: var(--sk-ink-2);
+  flex: 1; border-radius: 12px; padding: 14px; text-align: center;
+  background-image: var(--sk-weave), linear-gradient(180deg, var(--sk-paper-hi), var(--sk-paper-lo));
+  border: 1px solid var(--sk-paper-border);
+  box-shadow: var(--sk-shadow-card);
+  font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--sk-label);
 }
 .kpi b {
-  display: block; font-size: 24px; color: #6b4f2a; margin-top: 4px;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+  display: block; font-family: var(--sk-font-display);
+  font-size: 25px; font-weight: 900; color: var(--sk-ink); margin-top: 5px;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .chart {
-  border-radius: 10px; height: 300px; margin-bottom: 20px;
-  background-image: var(--sk-noise), linear-gradient(180deg, var(--sk-bg-from), var(--sk-bg-to));
-  border: 1px solid var(--sk-border);
-  box-shadow: var(--sk-shadow-md), var(--sk-top-light), var(--sk-bottom-dark);
+  border-radius: 12px; height: 300px; margin-bottom: 20px;
+  background-image: var(--sk-weave), linear-gradient(180deg, var(--sk-paper-hi), var(--sk-paper-lo));
+  border: 1px solid var(--sk-paper-border);
+  box-shadow: var(--sk-shadow-card);
 }
 .chart-wide { width: 100%; }
 </style>

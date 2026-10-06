@@ -1,5 +1,5 @@
-[PASS] Q: 订单DD20240001到哪了？         期望: query_order      实际: ['query_order']  耗时 3441ms
-[PASS] Q: 我的订单DD20240003签收了吗       期望: query_order      实际: ['query_order']  耗时 2006ms
+[PASS] Q: 订单DD20260001到哪了？         期望: query_order      实际: ['query_order']  耗时 3441ms
+[PASS] Q: 我的订单DD20260003签收了吗       期望: query_order      实际: ['query_order']  耗时 2006ms
 [PASS] Q: 长沙今天天气怎么样？               期望: get_weather      实际: ['get_weather']  耗时 1623ms
 [PASS] Q: 北京会下雨吗？要不要带伞             期望: get_weather      实际: ['get_weather']  耗时 2122ms
 [PASS] Q: 计算 1234*5678 等于多少        期望: calculate        实际: ['calculate']  耗时 1789ms

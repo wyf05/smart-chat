@@ -65,10 +65,10 @@ print("[knowledge] delete ->", code)
 
 # 5. 智能体走真实库：改订单状态后提问，回答应包含新状态
 call("POST", "/api/orders",
-     {"order_id": "DD20240001", "status": "打包中", "amount": "199.00",
+     {"order_id": "DD20260001", "status": "打包中", "amount": "199.00",
       "receiver": "张先生", "logistics": "预计今晚 22:00 前发出"}, token=TOKEN)
 code, r = call("POST", "/api/agent/chat",
-               {"message": "订单 DD20240001 现在什么状态？", "session_id": "smoke-db1"},
+               {"message": "订单 DD20260001 现在什么状态？", "session_id": "smoke-db1"},
                token=TOKEN)
 print("[agent/db-order] tools =", r["data"]["tools_used"], "|", r["data"]["reply"][:50])
 

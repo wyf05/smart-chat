@@ -34,7 +34,7 @@ async function handleLogin() {
   <div class="login-page">
     <div class="login-card">
       <div class="login-title">🛍️ 店小智 · 智能客服工作台</div>
-      <div class="login-sub">企业级电商智能客服系统</div>
+      <div class="login-badge">企业级电商智能客服系统</div>
       <el-input v-model="username" placeholder="用户名" size="large" @keyup.enter="handleLogin" />
       <el-input v-model="password" type="password" placeholder="密码" size="large"
                 show-password @keyup.enter="handleLogin" />
@@ -47,36 +47,45 @@ async function handleLogin() {
 </template>
 
 <style scoped>
-/* 拟物登录页：皮革门面 + 缝线 + 纸面卡片 */
+/* 拟物 v2 登录页：亚麻底 + 纸面卡 + 金色徽章 + 蓝色光泽主按钮 */
 .login-page {
   height: 100vh; display: flex; align-items: center; justify-content: center;
-  background-image: var(--sk-noise), var(--sk-wood-grain),
-    linear-gradient(180deg, #8b7355 0%, #6b5b45 60%, #55483a 100%);
-  box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.35);
+  background: linear-gradient(180deg, #d4c4a8 0%, #c8b898 55%, #b8a888 100%);
+  position: relative;
+}
+.login-page::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background-image: var(--sk-linen);
 }
 .login-card {
   position: relative;
-  width: 380px; padding: 36px 32px; border-radius: 12px;
-  background-image: var(--sk-noise), linear-gradient(180deg, #f0e9da, var(--sk-wood));
-  border: 1px solid var(--sk-border);
-  box-shadow: var(--sk-shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.8), inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  width: 400px; padding: 40px 36px; border-radius: 16px;
+  background-image: var(--sk-weave), linear-gradient(180deg, var(--sk-paper-hi), var(--sk-paper-lo));
+  border: 1px solid var(--sk-paper-border);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -1px 0 rgba(0, 0, 0, 0.06);
   display: flex; flex-direction: column; gap: 14px;
 }
-/* 卡片内圈皮革缝线 */
-.login-card::before {
-  content: ""; position: absolute; inset: 8px; border-radius: 9px;
-  border: 1px dashed rgba(139, 115, 85, 0.5); pointer-events: none;
-}
 .login-title {
-  font-size: 20px; font-weight: bold; text-align: center; color: var(--sk-ink);
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.65);
+  font-family: var(--sk-font-display);
+  font-weight: 900; font-size: 21px; text-align: center; color: var(--sk-ink);
+  text-shadow: 0 2px 0 rgba(255, 255, 255, 0.45), 0 4px 12px rgba(0, 0, 0, 0.15);
 }
-.login-sub { font-size: 13px; color: var(--sk-ink-2); text-align: center; margin-bottom: 10px; }
-.login-btn { width: 100%; height: 42px; font-size: 15px; letter-spacing: 6px; }
+.login-badge {
+  align-self: center; margin-bottom: 12px;
+  padding: 5px 18px; border-radius: 999px;
+  font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.14em;
+  color: #fff8e0;
+  background-image: linear-gradient(180deg, var(--sk-gold), var(--sk-gold-deep));
+  border: 1px solid #806010;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.25), inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+}
+.login-btn { width: 100%; height: 44px; font-size: 15px; letter-spacing: 6px; }
 .login-hint {
-  font-size: 12px; color: var(--sk-ink-3); text-align: center;
-  padding: 6px 0; border-radius: 8px;
-  background: rgba(139, 115, 85, 0.1);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
+  font-size: 12px; font-weight: 600; color: var(--sk-leather-deep); text-align: center;
+  padding: 7px 0; border-radius: 8px;
+  background: rgba(139, 115, 85, 0.12);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 </style>

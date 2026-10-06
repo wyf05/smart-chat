@@ -1,275 +1,331 @@
 /* ============================================================
-   店小智 · 拟物设计（Skeuomorphism）全局主题
-   原则：真实材质（皮革/木材/纸张/金属）、光源固定来自上方、
-        多层模糊投影、物理按压反馈。禁止纯扁平色块。
+   店小智 · 拟物设计（Skeuomorphism）全局主题 v2
+   严格对齐 StyleKit Skeuomorphism Showcase 配方：
+   - 奶油亚麻背景 + 细横纹；浅米皮革导航 + 缝线
+   - 衬线雕刻大标题（#3d2010），正文 #6b4f35，标签 #8b7355
+   - 蓝色光泽主按钮 / 银色次按钮 / 金色徽章
+   - 纸面卡片（#fafae8→#f0ead8, 边 #d0c8a0）；皮革面板（#c8a87a→#b89060）
+   - 光源固定上方；按下 = 下压 2px + 内阴影加深
    ============================================================ */
 
 :root {
-  /* --- 材质色板 --- */
-  --sk-leather: #8b7355;        /* 皮革棕 */
-  --sk-leather-deep: #6b5b45;   /* 深皮革 */
-  --sk-wood: #d4c4a8;           /* 木材米 */
-  --sk-wood-light: #c9b896;     /* 浅木 */
-  --sk-metal: #c0c0c0;          /* 金属银 */
-  --sk-paper: #f5efe6;          /* 纸张白（输入框） */
-  --sk-paper-plain: #f5f5dc;
-  --sk-sand: #b8a88a;           /* 砂色（按钮亮面） */
-  --sk-bronze: #a0926e;         /* 青铜 */
-  --sk-bg-from: #e8dfd1;        /* 背景主色（上） */
-  --sk-bg-to: #d4c4a8;          /* 背景主色（下） */
-  --sk-ink: #3a2f22;            /* 正文主色 */
-  --sk-ink-2: #6b5b45;          /* 正文辅色 */
-  --sk-ink-3: #8b7355;          /* 正文弱化色 */
-  --sk-border: #a89880;         /* 统一边框色 */
+  /* --- Showcase 色板 --- */
+  --sk-ink: #3d2010;            /* 标题墨色 */
+  --sk-body: #6b4f35;           /* 正文 */
+  --sk-label: #8b7355;          /* 标签/皮革棕 */
+  --sk-leather-deep: #5c4033;   /* 深皮革 */
+  --sk-gold: #c9a227;           /* 黄铜金 */
+  --sk-gold-deep: #a07818;
+  --sk-paper-hi: #fafae8;       /* 纸面亮部 */
+  --sk-paper-lo: #f0ead8;       /* 纸面暗部 */
+  --sk-paper-border: #d0c8a0;   /* 纸卡描边 */
+  --sk-nav-hi: #e8dfc8;         /* 导航亮部 */
+  --sk-nav-lo: #d4c8a8;         /* 导航暗部 */
+  --sk-nav-border: #b0a080;
+  --sk-leather-hi: #c8a87a;     /* 皮革面板亮部 */
+  --sk-leather-lo: #b89060;     /* 皮革面板暗部 */
+  --sk-leather-border: #a07848;
+  --sk-blue-hi: #5b9bd5;        /* 主按钮亮部 */
+  --sk-blue-mid: #3a7fc1;
+  --sk-blue-lo: #2860a0;        /* 主按钮暗部 */
+  --sk-blue-border: #1a508a;
+  --sk-silver-hi: #e8e8e8;
+  --sk-silver-mid: #d0d0d0;
+  --sk-silver-lo: #b8b8b8;
+  --sk-silver-border: #888;
 
   /* --- 多层光影（光源固定上方） --- */
-  --sk-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-  --sk-shadow-md: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
-  --sk-shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
-  --sk-shadow-hover: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
-  --sk-top-light: inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  --sk-top-light-soft: inset 0 1px 0 rgba(255, 255, 255, 0.45);
-  --sk-bottom-dark: inset 0 -1px 0 rgba(0, 0, 0, 0.1);
-  --sk-press: inset 0 2px 5px rgba(0, 0, 0, 0.22), inset 0 -1px 0 rgba(255, 255, 255, 0.25);
+  --sk-shadow-card: 0 10px 28px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -1px 0 rgba(0, 0, 0, 0.06);
+  --sk-shadow-chip: 0 4px 10px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.25), inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+  --sk-shadow-nav: 0 3px 8px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  --sk-shadow-btn: 0 4px 8px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3), inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+  --sk-shadow-btn-silver: 0 4px 8px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 0 rgba(0, 0, 0, 0.14);
+  --sk-shadow-leather-panel: 0 12px 28px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.18), inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+  --sk-press: inset 0 3px 6px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
 
-  /* --- 材质纹理（纯 CSS，无外部图片） --- */
-  /* 细颗粒噪点：叠在渐变上层表达皮革/纸面肌理 */
-  --sk-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0.05 0 0 0 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
-  /* 垂直木纹：受光时 background-position 可轻微位移 */
-  --sk-wood-grain: repeating-linear-gradient(90deg,
-      rgba(107, 91, 69, 0.07) 0 2px, transparent 2px 9px,
-      rgba(107, 91, 69, 0.04) 9px 11px, transparent 11px 18px);
+  /* --- 材质纹理（纯 CSS） --- */
+  /* 亚麻细横纹（页面底纹） */
+  --sk-linen: repeating-linear-gradient(0deg,
+      transparent 0, transparent 3px, rgba(0, 0, 0, 0.018) 3px, rgba(0, 0, 0, 0.018) 4px);
+  /* 纸卡十字织纹 */
+  --sk-weave: repeating-linear-gradient(0deg,
+      transparent 0, transparent 3px, rgba(0, 0, 0, 0.04) 3px, rgba(0, 0, 0, 0.04) 4px),
+    repeating-linear-gradient(90deg,
+      transparent 0, transparent 8px, rgba(0, 0, 0, 0.025) 8px, rgba(0, 0, 0, 0.025) 9px);
+  /* 皮革缝线（横向虚线） */
+  --sk-stitch-h: repeating-linear-gradient(90deg,
+      transparent 0, transparent 5px, rgba(255, 255, 255, 0.2) 5px, rgba(255, 255, 255, 0.2) 9px);
+  /* 深色缝线（浅底用） */
+  --sk-stitch-dark: repeating-linear-gradient(90deg,
+      transparent 0, transparent 6px, rgba(101, 67, 33, 0.25) 6px, rgba(101, 67, 33, 0.25) 10px);
+  /* 纸张斜纹（hero 背景） */
+  --sk-paper-diag: repeating-linear-gradient(4deg,
+      transparent 0px, transparent 40px, rgba(101, 67, 33, 0.07) 40px, rgba(101, 67, 33, 0.07) 41px),
+    repeating-linear-gradient(-2deg,
+      transparent 0px, transparent 70px, rgba(180, 140, 80, 0.05) 70px, rgba(180, 140, 80, 0.05) 71px);
+
+  /* --- Showcase 字体三件套 --- */
+  --sk-font-display: "Playfair Display", Georgia, "Times New Roman", "STZhongsong", "SimSun", serif;
+  --sk-font-body: "Albert Sans", "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+  --sk-font-mono: "Fragment Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
 }
 
 /* ---------- 基础 ---------- */
 html, body { margin: 0; padding: 0; }
 body {
-  font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", "Helvetica Neue", sans-serif;
-  color: var(--sk-ink);
-  background: linear-gradient(180deg, var(--sk-bg-from) 0%, var(--sk-bg-to) 100%) fixed;
+  font-family: var(--sk-font-body);
+  color: var(--sk-body);
+  background: linear-gradient(180deg, #d4c4a8 0%, #c8b898 55%, #b8a888 100%) fixed;
 }
+/* 亚麻底纹盖满全页 */
 #app { min-height: 100vh; }
-
-/* 通用纸面卡片：渐变 + 噪点 + 顶光底影 + 多层外投影 */
-.sk-card {
-  background-image: var(--sk-noise), linear-gradient(180deg, var(--sk-bg-from), var(--sk-bg-to));
-  border: 1px solid var(--sk-border);
-  border-radius: 10px;
-  box-shadow: var(--sk-shadow-md), var(--sk-top-light), var(--sk-bottom-dark);
+#app::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image: var(--sk-linen);
 }
+#app > * { position: relative; z-index: 1; }
 
-/* 雕刻字（letterpress）：正文凹进纸面 */
-.sk-engraved {
+/* 衬线展示字体（标题/品牌）：Playfair Display + 宋体回退 */
+.sk-display {
+  font-family: var(--sk-font-display);
+  font-weight: 900;
   color: var(--sk-ink);
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
-/* ---------- 滚动条：木质导轨 + 皮革滑块 ---------- */
+/* 金色徽章（大写加宽字距药丸） */
+.sk-badge {
+  display: inline-block; padding: 6px 20px; border-radius: 999px;
+  font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.14em;
+  color: #fff8e0;
+  background-image: linear-gradient(180deg, var(--sk-gold), var(--sk-gold-deep));
+  border: 1px solid #806010;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.25), inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+}
+
+/* 纸面卡片 */
+.sk-card {
+  background: linear-gradient(180deg, var(--sk-paper-hi), var(--sk-paper-lo));
+  background-image: var(--sk-weave), linear-gradient(180deg, var(--sk-paper-hi), var(--sk-paper-lo));
+  border: 1px solid var(--sk-paper-border);
+  border-radius: 12px;
+  box-shadow: var(--sk-shadow-card);
+}
+
+/* ---------- 滚动条：金属银 ---------- */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track { background: rgba(107, 91, 69, 0.08); }
+::-webkit-scrollbar-track { background: rgba(101, 67, 33, 0.1); }
 ::-webkit-scrollbar-thumb {
   border-radius: 6px; border: 2px solid transparent; background-clip: padding-box;
-  background-image: linear-gradient(180deg, var(--sk-wood-light), var(--sk-border));
-  box-shadow: var(--sk-top-light);
-}
-::-webkit-scrollbar-thumb:hover {
-  background-image: linear-gradient(180deg, var(--sk-sand), var(--sk-leather));
+  background-image: linear-gradient(180deg, var(--sk-silver-hi), var(--sk-silver-lo));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -1px 0 rgba(0, 0, 0, 0.14);
 }
 
 /* ---------- 焦点可见性 ---------- */
-:focus-visible { outline: 2px dashed var(--sk-leather); outline-offset: 2px; }
+:focus-visible { outline: 2px dashed var(--sk-leather-deep); outline-offset: 2px; }
 
 /* ============================================================
    Element Plus 拟物覆盖
    ============================================================ */
 
-/* ---------- 按钮：物理按键（hover 微抬，active 下压） ---------- */
+/* ---------- 按钮：光泽按键，active 下压 2px ---------- */
 .el-button {
   border-radius: 8px;
-  border: 1px solid var(--sk-border);
-  font-weight: 600;
-  color: var(--sk-ink);
-  background-image: var(--sk-noise), linear-gradient(180deg, #f2ebdd, var(--sk-wood));
-  box-shadow: var(--sk-shadow-sm), var(--sk-top-light), var(--sk-bottom-dark);
-  transition: all 0.2s ease-out;
+  border: 1px solid var(--sk-silver-border);
+  font-weight: bold;
+  color: #444;
+  background-image: linear-gradient(180deg, var(--sk-silver-hi) 0%, var(--sk-silver-mid) 50%, var(--sk-silver-lo) 100%);
+  box-shadow: var(--sk-shadow-btn-silver);
+  transition: all 0.075s ease-out;
 }
 .el-button:hover {
-  transform: translateY(-1px);
-  color: var(--sk-ink);
-  background-image: var(--sk-noise), linear-gradient(180deg, #f7f1e4, var(--sk-wood-light));
-  box-shadow: var(--sk-shadow-md), var(--sk-top-light), var(--sk-bottom-dark);
+  color: #333;
+  background-image: linear-gradient(180deg, #f0f0f0 0%, #d8d8d8 50%, #c0c0c0 100%);
 }
-.el-button:active { transform: translateY(1px); box-shadow: var(--sk-press); }
+.el-button:active { transform: translateY(2px); filter: brightness(0.95); box-shadow: var(--sk-press); }
 
 .el-button--primary {
   color: #fff;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
-  background-image: var(--sk-noise), linear-gradient(180deg, var(--sk-sand), var(--sk-leather));
-  border-color: #7a684c;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+  background-image: linear-gradient(180deg, var(--sk-blue-hi) 0%, var(--sk-blue-mid) 50%, var(--sk-blue-lo) 100%);
+  border-color: var(--sk-blue-border);
+  box-shadow: var(--sk-shadow-btn);
 }
 .el-button--primary:hover {
   color: #fff;
-  background-image: var(--sk-noise), linear-gradient(180deg, #c4b597, #7d6749);
+  background-image: linear-gradient(180deg, #6baae0 0%, #4a8fd1 50%, #3870b0 100%);
 }
 .el-button--success {
-  color: #fff;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
-  background-image: var(--sk-noise), linear-gradient(180deg, #a8b07a, #6e7a3f);
-  border-color: #5d6836;
+  color: #fff8e0;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+  background-image: linear-gradient(180deg, var(--sk-gold) 0%, var(--sk-gold-deep) 100%);
+  border-color: #806010;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.4), inset 0 -1px 0 rgba(0, 0, 0, 0.2);
 }
 .el-button--success:hover {
-  color: #fff;
-  background-image: var(--sk-noise), linear-gradient(180deg, #b4bc88, #79854a);
+  color: #fff8e0;
+  background-image: linear-gradient(180deg, #d9b23a 0%, #b08824 100%);
 }
 .el-button--danger {
   color: #fff;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
-  background-image: var(--sk-noise), linear-gradient(180deg, #b0765a, #8b4a35);
-  border-color: #74402e;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+  background-image: linear-gradient(180deg, #d96a5e 0%, #b03a2c 55%, #8b1a1a 100%);
+  border-color: #7a1414;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.3), inset 0 -1px 0 rgba(0, 0, 0, 0.2);
 }
 .el-button--danger:hover {
   color: #fff;
-  background-image: var(--sk-noise), linear-gradient(180deg, #bc8468, #96543e);
+  background-image: linear-gradient(180deg, #e47a6e 0%, #c04a3a 55%, #9b2626 100%);
 }
-/* 文字按钮回归轻量，但保留皮革色 */
-.el-button.is-text { background-image: none; box-shadow: none; border-color: transparent; color: var(--sk-ink-2); }
-.el-button.is-text:hover { background-color: rgba(139, 115, 85, 0.12); color: var(--sk-ink); transform: none; }
-.el-button.is-disabled, .el-button.is-disabled:hover { transform: none; opacity: 0.55; box-shadow: var(--sk-shadow-sm); }
+.el-button.is-text { background-image: none; box-shadow: none; border-color: transparent; color: var(--sk-leather-deep); }
+.el-button.is-text:hover { background-color: rgba(139, 115, 85, 0.14); color: var(--sk-ink); transform: none; }
+.el-button.is-disabled, .el-button.is-disabled:hover { transform: none; opacity: 0.55; box-shadow: var(--sk-shadow-btn-silver); }
 
-/* ---------- 输入框：纸张凹槽，聚焦加深内阴影 ---------- */
+/* ---------- 输入框：纸面凹槽，聚焦加深 ---------- */
 .el-input__wrapper, .el-textarea__inner {
-  background-color: var(--sk-paper);
-  border: 1px solid var(--sk-border);
+  background-color: #f7f3e6;
+  border: 1px solid #c4ba9a;
   border-radius: 8px;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
-  transition: all 0.2s ease-out;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1), inset 0 -1px 0 rgba(255, 255, 255, 0.7);
+  transition: all 0.15s ease-out;
 }
 .el-input__wrapper { padding: 1px 11px; }
-.el-input__wrapper:hover { border-color: var(--sk-leather); }
+.el-input__wrapper:hover { border-color: var(--sk-label); }
 .el-input__wrapper.is-focus {
-  border-color: var(--sk-leather);
-  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.14), var(--sk-shadow-md);
+  border-color: var(--sk-leather-deep);
+  box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.16), inset 0 -1px 0 rgba(255, 255, 255, 0.7), 0 1px 2px rgba(0, 0, 0, 0.15);
 }
-.el-textarea__inner:hover { border-color: var(--sk-leather); }
+.el-textarea__inner:hover { border-color: var(--sk-label); }
 .el-textarea__inner:focus {
-  border-color: var(--sk-leather);
-  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.14), var(--sk-shadow-md);
+  border-color: var(--sk-leather-deep);
+  box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.16), inset 0 -1px 0 rgba(255, 255, 255, 0.7), 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 .el-input__inner { color: var(--sk-ink); }
-.el-input__inner::placeholder, .el-textarea__inner::placeholder { color: #a89880; }
-.el-input.is-disabled .el-input__wrapper { background-color: #e6ddcd; box-shadow: var(--sk-top-light-soft); }
+.el-input__inner::placeholder, .el-textarea__inner::placeholder { color: #a89878; }
+.el-input.is-disabled .el-input__wrapper { background-color: #e8e0cc; box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06); }
 
-/* ---------- 表格：皮革表头 + 纸面行 ---------- */
+/* ---------- 表格：纸面卡片容器 + 织纹表头 + 缝线行分隔 ---------- */
 .el-table {
-  --el-table-border-color: var(--sk-border);
+  --el-table-border-color: rgba(176, 160, 128, 0.4);
   --el-table-header-bg-color: transparent;
   --el-table-header-text-color: var(--sk-ink);
   --el-table-text-color: var(--sk-ink);
-  --el-table-row-hover-bg-color: rgba(184, 168, 138, 0.25);
+  --el-table-row-hover-bg-color: rgba(201, 162, 39, 0.12);
   --el-table-tr-bg-color: transparent;
-  background-color: transparent;
-  border-radius: 10px;
+  background-image: var(--sk-weave), linear-gradient(180deg, var(--sk-paper-hi), var(--sk-paper-lo));
+  border: 1px solid var(--sk-paper-border);
+  border-radius: 12px;
+  box-shadow: var(--sk-shadow-card);
+  overflow: hidden;
 }
-.el-table__inner-wrapper { border-radius: 10px; }
+.el-table__inner-wrapper { border-radius: 12px; overflow: hidden; }
 .el-table th.el-table__cell {
-  background-image: var(--sk-noise), linear-gradient(180deg, #ddd0b4, var(--sk-wood-light));
+  background-image: var(--sk-weave), linear-gradient(180deg, #e6dcc0, #d6c9a4);
   font-weight: 700;
-  box-shadow: var(--sk-top-light);
-  border-bottom: 1px solid var(--sk-border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  border-bottom: 2px solid #b0a080;
 }
-.el-table .el-table__cell { background-color: transparent; }
-.el-table--border .el-table__cell { border-right-color: var(--sk-border); }
-.el-table--border::after, .el-table--border::before { background-color: var(--sk-border); }
-.el-table__inner-wrapper::before { background-color: var(--sk-border); }
+.el-table .el-table__cell { background-color: transparent; border-bottom: 1px solid rgba(176, 160, 128, 0.4); }
+/* 固定列（如"操作"）自带白底会盖掉织纹，补上同款材质保证颜色一致 */
+.el-table .el-table-fixed-column--left, .el-table .el-table-fixed-column--right {
+  background-image: var(--sk-weave), linear-gradient(180deg, var(--sk-paper-hi), var(--sk-paper-lo)) !important;
+  background-color: transparent !important;
+}
+.el-table th.el-table-fixed-column--left, .el-table th.el-table-fixed-column--right {
+  background-image: var(--sk-weave), linear-gradient(180deg, #e6dcc0, #d6c9a4) !important;
+}
+.el-table__inner-wrapper::before { display: none; }
 .el-table__empty-block { background-color: transparent; }
 
-/* ---------- 标签：材质徽章（禁止纯扁平色块） ---------- */
+/* ---------- 标签：材质徽章 ---------- */
 .el-tag {
-  border-radius: 6px; font-weight: 600; border-width: 1px; border-style: solid;
-  box-shadow: var(--sk-top-light), var(--sk-bottom-dark);
+  border-radius: 6px; font-weight: 700; border-width: 1px; border-style: solid;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 -1px 0 rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.15);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.25);
 }
-.el-tag--success { background-image: linear-gradient(180deg, #e3e7cc, #cdd3ae); color: #45501c; border-color: #a8b07a; }
-.el-tag--warning { background-image: linear-gradient(180deg, #f2e3c2, #e0cb9d); color: #6b4a1a; border-color: #c0a060; }
-.el-tag--info    { background-image: linear-gradient(180deg, #e7e3d7, #d5cfc0); color: #57503f; border-color: #b0a890; }
-.el-tag--danger  { background-image: linear-gradient(180deg, #eed8ca, #dfbda9); color: #6e2f1a; border-color: #b98a70; }
-.el-tag--primary { background-image: linear-gradient(180deg, #e6dcc6, #d3c5a8); color: #5a4a30; border-color: var(--sk-border); }
+.el-tag--success { background-image: linear-gradient(180deg, #b5c98a, #8aa355); color: #3d4a12; border-color: #75903e; }
+.el-tag--warning { background-image: linear-gradient(180deg, #e8cf8a, #cfaf55); color: #5c4408; border-color: #a8862e; }
+.el-tag--info    { background-image: linear-gradient(180deg, #d9d2c0, #bfb69e); color: #4a4030; border-color: #a09478; }
+.el-tag--danger  { background-image: linear-gradient(180deg, #e8a89e, #cc7a6c); color: #5c1810; border-color: #a85a4c; }
+.el-tag--primary { background-image: linear-gradient(180deg, #d9c8a0, #c0ab78); color: #4a3418; border-color: #a08850; }
 
-/* ---------- 开关：皮革凹槽 + 金属旋钮 ---------- */
+/* ---------- 开关：凹槽 + 金属旋钮 ---------- */
 .el-switch__core {
-  background-image: var(--sk-noise), linear-gradient(180deg, #cfc4ae, #bdb096);
-  border: 1px solid var(--sk-border);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15);
+  background-image: linear-gradient(180deg, #cfc4a4, #b8ac88);
+  border: 1px solid #a89870;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 -1px 0 rgba(255, 255, 255, 0.5);
 }
 .el-switch.is-checked .el-switch__core {
-  background-image: var(--sk-noise), linear-gradient(180deg, var(--sk-sand), var(--sk-leather));
-  border-color: #7a684c;
+  background-image: linear-gradient(180deg, var(--sk-blue-mid), var(--sk-blue-lo));
+  border-color: var(--sk-blue-border);
 }
 .el-switch__action {
-  background-image: linear-gradient(180deg, #f2f2f2, var(--sk-metal));
-  border: 1px solid #9c9c9c;
-  box-shadow: var(--sk-shadow-sm), var(--sk-top-light);
+  background-image: linear-gradient(180deg, #f2f2f2, var(--sk-silver-lo));
+  border: 1px solid #8c8c8c;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 /* ---------- 标签页 ---------- */
-.el-tabs__nav-wrap::after { background-color: rgba(168, 152, 128, 0.5); height: 2px; }
-.el-tabs__item { color: var(--sk-ink-2); font-weight: 600; }
+.el-tabs__nav-wrap::after { background-color: rgba(176, 160, 128, 0.6); height: 2px; }
+.el-tabs__item { color: var(--sk-body); font-weight: 600; }
 .el-tabs__item:hover { color: var(--sk-ink); }
 .el-tabs__item.is-active { color: var(--sk-ink); }
 .el-tabs__active-bar {
   height: 3px; border-radius: 2px;
-  background-image: linear-gradient(180deg, var(--sk-sand), var(--sk-leather));
+  background-image: linear-gradient(180deg, var(--sk-gold), var(--sk-gold-deep));
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 /* ---------- 对话框 / 消息框 / 全局消息：纸面卡 ---------- */
 .el-dialog {
-  background-image: var(--sk-noise), linear-gradient(180deg, var(--sk-bg-from), var(--sk-wood));
-  border: 1px solid var(--sk-border);
-  border-radius: 12px;
-  box-shadow: var(--sk-shadow-lg), var(--sk-top-light);
+  background: linear-gradient(180deg, var(--sk-paper-hi), var(--sk-paper-lo));
+  border: 1px solid var(--sk-paper-border);
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 .el-dialog__title { color: var(--sk-ink); font-weight: 700; }
-.el-overlay { background-color: rgba(58, 47, 34, 0.45); }
+.el-overlay { background-color: rgba(61, 32, 16, 0.45); }
 
 .el-message-box {
-  background-image: var(--sk-noise), linear-gradient(180deg, var(--sk-bg-from), var(--sk-wood));
-  border: 1px solid var(--sk-border);
-  border-radius: 12px;
-  box-shadow: var(--sk-shadow-lg), var(--sk-top-light);
+  background: linear-gradient(180deg, var(--sk-paper-hi), var(--sk-paper-lo));
+  border: 1px solid var(--sk-paper-border);
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 .el-message-box__title, .el-message-box__content { color: var(--sk-ink); }
 
 .el-message {
-  background-image: var(--sk-noise), linear-gradient(180deg, var(--sk-bg-from), var(--sk-wood));
-  border: 1px solid var(--sk-border) !important;
-  box-shadow: var(--sk-shadow-md), var(--sk-top-light);
+  background: linear-gradient(180deg, var(--sk-paper-hi), var(--sk-paper-lo)) !important;
+  border: 1px solid var(--sk-paper-border) !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 .el-message .el-message__content { color: var(--sk-ink); font-weight: 600; }
 
 /* ---------- 下拉 / 悬浮层 ---------- */
 .el-select__popper.el-popper, .el-popper.is-light {
-  background: var(--sk-paper);
-  border: 1px solid var(--sk-border);
-  box-shadow: var(--sk-shadow-md);
+  background: var(--sk-paper-hi);
+  border: 1px solid var(--sk-paper-border);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
 }
-.el-select-dropdown__item.is-hovering, .el-select-dropdown__item:hover { background-color: #ece3d2; }
+.el-select-dropdown__item.is-hovering, .el-select-dropdown__item:hover { background-color: #ece4c8; }
 .el-select-dropdown__item.is-selected { color: var(--sk-leather-deep); font-weight: 700; }
-.el-popper.is-light .el-popper__arrow::before { background: var(--sk-paper); border-color: var(--sk-border); }
+.el-popper.is-light .el-popper__arrow::before { background: var(--sk-paper-hi); border-color: var(--sk-paper-border); }
 
 /* ---------- 警示条 ---------- */
 .el-alert--success {
-  background-image: linear-gradient(180deg, #eef0dd, #dde2c2);
-  border: 1px solid #a8b07a; border-radius: 10px;
-  box-shadow: var(--sk-shadow-sm), var(--sk-top-light);
+  background-image: var(--sk-weave), linear-gradient(180deg, #eef0d8, #dfe2c0);
+  border: 1px solid #a8b070; border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
-.el-alert--success .el-alert__title { color: #45501c; }
+.el-alert--success .el-alert__title { color: #3d4a12; }
 .el-alert__title { font-weight: 600; }
 
 /* ---------- 表单 ---------- */
-.el-form-item__label { color: var(--sk-ink-2); font-weight: 600; }
+.el-form-item__label { color: var(--sk-body); font-weight: 600; }
 
 /* ---------- 空状态 ---------- */
-.el-empty__description p { color: var(--sk-ink-2); }
+.el-empty__description p { color: var(--sk-body); }
 
 /* ---------- 动效可关闭 ---------- */
 @media (prefers-reduced-motion: reduce) {

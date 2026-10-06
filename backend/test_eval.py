@@ -5,8 +5,8 @@ from app.agent import agent_chat
 
 # (问题, 期望调用的工具；None 表示期望不调用任何工具)
 CASES = [
-    ("订单DD20240001到哪了？", "query_order"),
-    ("我的订单DD20240003签收了吗", "query_order"),
+    ("订单DD20260001到哪了？", "query_order"),
+    ("我的订单DD20260003签收了吗", "query_order"),
     ("长沙今天天气怎么样？", "get_weather"),
     ("北京会下雨吗？要不要带伞", "get_weather"),
     ("计算 1234*5678 等于多少", "calculate"),

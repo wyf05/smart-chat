@@ -19,7 +19,7 @@ from app.database import SessionLocal
 
 @tool
 def query_order(order_id: str) -> str:
-    """根据订单号查询订单的状态、金额、收件人与物流信息。参数 order_id 是订单号，格式如 "DD20240001"。
+    """根据订单号查询订单的状态、金额、收件人与物流信息。参数 order_id 是订单号，格式如 "DD20260001"。
     用户询问订单进度、物流、发货、签收情况时必须使用本工具。"""
     db = SessionLocal()
     try:

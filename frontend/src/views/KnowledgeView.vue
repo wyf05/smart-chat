@@ -95,7 +95,7 @@ onMounted(load)
     <div class="toolbar">
       <el-button type="primary" :icon="Plus" @click="openAdd">新增知识条目</el-button>
     </div>
-    <el-table :data="items" border>
+    <el-table :data="items">
       <el-table-column prop="question" label="问题" width="240" />
       <el-table-column prop="answer" label="标准答案" min-width="280" />
       <el-table-column prop="keywords" label="检索关键词" width="180" />
@@ -128,13 +128,16 @@ onMounted(load)
 <style scoped>
 .page { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
 .page-title {
-  margin: 0 0 6px; color: var(--sk-ink);
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+  font-family: var(--sk-font-display);
+  font-weight: 900; font-size: 24px;
+  margin: 0 0 8px; color: var(--sk-ink);
+  text-shadow: 0 2px 0 rgba(255, 255, 255, 0.45), 0 4px 12px rgba(0, 0, 0, 0.12);
 }
-.page-desc { color: var(--sk-ink-2); font-size: 13px; margin: 0 0 16px; }
+.page-desc { color: var(--sk-body); font-size: 13px; margin: 0 0 16px; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4); }
 .page-desc code {
-  background: rgba(139, 115, 85, 0.15); color: var(--sk-leather-deep);
-  padding: 1px 6px; border-radius: 4px; border: 1px solid rgba(168, 152, 128, 0.5);
+  background: rgba(139, 115, 85, 0.16); color: var(--sk-leather-deep);
+  padding: 1px 6px; border-radius: 4px; border: 1px solid rgba(176, 160, 128, 0.5);
+  font-family: var(--sk-font-mono);
 }
 .test-box { display: flex; gap: 10px; margin-bottom: 12px; }
 .test-input { flex: 1; }

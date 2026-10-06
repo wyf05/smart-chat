@@ -43,7 +43,7 @@ class Order(Base):
     """订单表：业务数据中心管理，智能体 query_order 工具查询的数据源"""
     __tablename__ = "orders"
 
-    order_id = Column(String, primary_key=True)     # 订单号，如 DD20240001
+    order_id = Column(String, primary_key=True)     # 订单号，如 DD20260001
     status = Column(String, nullable=False, default="待付款")   # 待付款/打包中/已发货/已签收
     amount = Column(String, nullable=False, default="0.00")     # 订单金额
     receiver = Column(String, nullable=False, default="")       # 收件人

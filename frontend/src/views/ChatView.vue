@@ -70,11 +70,11 @@ async function handleDelete(id) {
 <style scoped>
 .chat-layout {
   display: flex; height: calc(100vh - 56px);
-  background: linear-gradient(180deg, var(--sk-bg-from), var(--sk-bg-to));
+  background: linear-gradient(180deg, #d4c4a8 0%, #c8b898 55%, #b8a888 100%);
 }
 .no-session {
   flex: 1; display: flex; align-items: center; justify-content: center;
-  color: var(--sk-ink-2); font-size: 15px;
+  color: var(--sk-leather-deep); font-size: 15px; font-weight: 600;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 </style>

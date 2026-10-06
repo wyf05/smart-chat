@@ -2,7 +2,7 @@
 from app.agent import agent_chat
 
 # 测试 1：订单查询（业务工具）
-r = agent_chat("订单 DD20240001 现在到哪了？", session_id="test1")
+r = agent_chat("订单 DD20260001 现在到哪了？", session_id="test1")
 print("回复：", r["reply"])
 print("调用的工具：", r["tools_used"])
 print("-" * 50)

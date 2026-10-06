@@ -34,7 +34,7 @@ r = call("POST", "/api/sessions")
 SID = r["id"]
 
 # 1. 智能体：订单查询
-r = call("POST", "/api/agent/chat", {"message": "订单 DD20240001 到哪了？", "session_id": SID})
+r = call("POST", "/api/agent/chat", {"message": "订单 DD20260001 到哪了？", "session_id": SID})
 print("[agent/order]", r["data"]["tools_used"], "|", r["data"]["reply"][:60])
 
 # 2. 智能体：自定义优惠券工具
@@ -42,7 +42,7 @@ r = call("POST", "/api/agent/chat", {"message": "优惠券 QUAN100 还能用吗�
 print("[agent/coupon]", r["data"]["tools_used"], "|", r["data"]["reply"][:60])
 
 # 3. 意图路由
-for msg in ("用一句话介绍 Docker", "帮我算 123*456", "写一首关于春天的诗", "订单 DD20240002 什么状态"):
+for msg in ("用一句话介绍 Docker", "帮我算 123*456", "写一首关于春天的诗", "订单 DD20260002 什么状态"):
     r = call("POST", "/api/smart/chat", {"message": msg, "session_id": SID})
     print("[smart]", r["data"]["route"], "<-", msg)
 

@@ -18,8 +18,12 @@ function initCharts(data) {
   echarts.init(toolEl).setOption({
     title: { text: '工具调用分布', left: 'center', textStyle: titleStyle },
     tooltip: {},
-    grid: { left: 40, right: 20, bottom: 30, top: 40 },
-    xAxis: { type: 'category', data: tools.map(([k]) => k), axisLabel: { color: BODY } },
+    grid: { left: 40, right: 20, bottom: 50, top: 40 },
+    xAxis: {
+      type: 'category', data: tools.map(([k]) => k),
+      // interval:0 强制显示每个工具名，rotate 防止长名字（如 search_knowledge）重叠
+      axisLabel: { color: BODY, interval: 0, rotate: 30, fontSize: 11 },
+    },
     yAxis: { type: 'value', minInterval: 1, axisLabel: { color: BODY } },
     series: [{
       type: 'bar', data: tools.map(([, v]) => v), barMaxWidth: 46,

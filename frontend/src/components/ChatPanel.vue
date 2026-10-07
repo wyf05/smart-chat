@@ -13,6 +13,7 @@ const inputText = ref('')
 const loading = ref(false)
 const agentMode = ref(false)   // 智能体模式开关
 const streamMode = ref(true)   // 流式输出开关，默认开启
+const streaming = ref(false)   // 流式回复进行中（占位气泡已推入，不再显示独立思考气泡）
 const msgListRef = ref(null)
 
 onMounted(async () => {
@@ -79,30 +80,35 @@ async function handleSend() {
 // 流式发送：fetch 逐块读取 SSE
 // 注意：浏览器原生 EventSource 只支持 GET，POST 流式要用 fetch + ReadableStream 手动读
 async function handleSendStream(text) {
+  streaming.value = true
   messages.value.push({ role: 'assistant', content: '' })
   const idx = messages.value.length - 1
 
-  const res = await fetch('/api/chat/stream', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${localStorage.getItem('dxz_token') || ''}`,  // SSE 也要带 JWT
-    },
-    body: JSON.stringify({ message: text, session_id: props.sessionId }),
-  })
-  const reader = res.body.getReader()
-  const decoder = new TextDecoder()
+  try {
+    const res = await fetch('/api/chat/stream', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('dxz_token') || ''}`,  // SSE 也要带 JWT
+      },
+      body: JSON.stringify({ message: text, session_id: props.sessionId }),
+    })
+    const reader = res.body.getReader()
+    const decoder = new TextDecoder()
 
-  while (true) {
-    const { done, value } = await reader.read()
-    if (done) break
-    for (const line of decoder.decode(value).split('\n\n')) {
-      if (!line.startsWith('data: ')) continue
-      const payload = line.slice(6)
-      if (payload === '[DONE]') continue
-      try { messages.value[idx].content += JSON.parse(payload).delta } catch (e) { /* 忽略半截包 */ }
-      scrollToBottom()
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      for (const line of decoder.decode(value).split('\n\n')) {
+        if (!line.startsWith('data: ')) continue
+        const payload = line.slice(6)
+        if (payload === '[DONE]') continue
+        try { messages.value[idx].content += JSON.parse(payload).delta } catch (e) { /* 忽略半截包 */ }
+        scrollToBottom()
+      }
     }
+  } finally {
+    streaming.value = false
   }
 }
 
@@ -131,10 +137,16 @@ async function scrollToBottom() {
     <div class="chat-body" ref="msgListRef">
       <div v-for="(msg, index) in messages" :key="index" class="msg-row" :class="msg.role">
         <div class="avatar">{{ msg.role === 'user' ? '🧑' : '🛍️' }}</div>
-        <div class="bubble">{{ msg.content }}</div>
+        <div class="bubble">
+          <!-- 流式占位气泡在首字到达前原地显示思考态，避免与独立思考气泡重复 -->
+          <template v-if="streaming && !msg.content && index === messages.length - 1">
+            <el-icon class="is-loading"><Loading /></el-icon> 正在思考...
+          </template>
+          <template v-else>{{ msg.content }}</template>
+        </div>
       </div>
 
-      <div v-if="loading" class="msg-row assistant">
+      <div v-if="loading && !streaming" class="msg-row assistant">
         <div class="avatar">🛍️</div>
         <div class="bubble loading-bubble">
           <el-icon class="is-loading"><Loading /></el-icon> 正在思考...

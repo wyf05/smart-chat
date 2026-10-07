@@ -17,8 +17,8 @@ from app.database import SessionLocal, init_db
 from app.llm import chat, classify_intent, llm, to_messages
 from app.models import User
 from app.schemas import (ChatRequest, ChatResponse, CouponIn, KnowledgeIn,
-                         LoginRequest, MessageOut, OrderIn, SessionOut,
-                         SessionTitleUpdate)
+                         LoginRequest, MessageOut, OrderIn, RegisterRequest,
+                         SessionOut, SessionTitleUpdate)
 from app.security import create_token, hash_password, verify_token
 
 # ============ 日志配置：线上排查问题的唯一依靠 ============
@@ -91,6 +91,18 @@ def login(req: LoginRequest, db: Session = Depends(get_db)):
     if not user or user.password_hash != hash_password(req.password):
         raise HTTPException(status_code=401, detail="用户名或密码错误")
     return {"code": 0, "message": "success",
+            "data": {"token": create_token(user.username), "username": user.username}}
+
+
+@app.post("/api/auth/register")
+def register(req: RegisterRequest, db: Session = Depends(get_db)):
+    """账号注册：用户名唯一，成功后直接签发 JWT（免二次登录）"""
+    if db.get(User, req.username):
+        raise HTTPException(status_code=409, detail="用户名已被占用，请换一个")
+    user = User(username=req.username, password_hash=hash_password(req.password))
+    db.add(user)
+    db.commit()
+    return {"code": 0, "message": "注册成功",
             "data": {"token": create_token(user.username), "username": user.username}}
 
 

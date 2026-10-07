@@ -1,14 +1,21 @@
 <script setup>
-// 登录页：JWT 鉴权入口。默认演示账号 admin / admin123
+// 登录/注册页：JWT 鉴权入口。默认演示账号 admin / admin123
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { login } from '../api/index.js'
+import { login, register } from '../api/index.js'
 
 const router = useRouter()
+const tab = ref('login')            // login | register
 const username = ref('admin')
 const password = ref('')
+const password2 = ref('')
 const loading = ref(false)
+
+function saveSession(data) {
+  localStorage.setItem('dxz_token', data.token)
+  localStorage.setItem('dxz_username', data.username)
+}
 
 async function handleLogin() {
   if (!username.value || !password.value) {
@@ -18,12 +25,35 @@ async function handleLogin() {
   loading.value = true
   try {
     const res = await login(username.value, password.value)
-    localStorage.setItem('dxz_token', res.data.data.token)
-    localStorage.setItem('dxz_username', res.data.data.username)
+    saveSession(res.data.data)
     ElMessage.success('登录成功')
     router.push({ name: 'home' })
   } catch (e) {
     ElMessage.error(e.response?.data?.detail || '登录失败，请检查用户名密码')
+  } finally {
+    loading.value = false
+  }
+}
+
+async function handleRegister() {
+  if (!username.value || !password.value || !password2.value) {
+    ElMessage.warning('请填写完整')
+    return
+  }
+  if (password.value !== password2.value) {
+    ElMessage.warning('两次输入的密码不一致')
+    return
+  }
+  loading.value = true
+  try {
+    const res = await register(username.value, password.value)
+    saveSession(res.data.data)
+    ElMessage.success('注册成功，已自动登录')
+    router.push({ name: 'home' })
+  } catch (e) {
+    // 422 是格式校验（用户名/密码规则），409 是用户名重复
+    const d = e.response?.data
+    ElMessage.error(d?.detail || (d?.message === 'failure' ? '格式不符合要求' : '注册失败，请稍后再试'))
   } finally {
     loading.value = false
   }
@@ -35,13 +65,32 @@ async function handleLogin() {
     <div class="login-card">
       <div class="login-title">🛍️ 店小智 · 智能客服工作台</div>
       <div class="login-badge">企业级电商智能客服系统</div>
-      <el-input v-model="username" placeholder="用户名" size="large" @keyup.enter="handleLogin" />
-      <el-input v-model="password" type="password" placeholder="密码" size="large"
-                show-password @keyup.enter="handleLogin" />
-      <el-button type="primary" size="large" :loading="loading" class="login-btn" @click="handleLogin">
-        登 录
-      </el-button>
-      <div class="login-hint">演示账号：admin / admin123</div>
+      <el-tabs v-model="tab" stretch>
+        <el-tab-pane label="登 录" name="login">
+          <div class="pane">
+            <el-input v-model="username" placeholder="用户名" size="large" @keyup.enter="handleLogin" />
+            <el-input v-model="password" type="password" placeholder="密码" size="large"
+                      show-password @keyup.enter="handleLogin" />
+            <el-button type="primary" size="large" :loading="loading" class="login-btn" @click="handleLogin">
+              登 录
+            </el-button>
+            <div class="login-hint">演示账号：admin / admin123</div>
+          </div>
+        </el-tab-pane>
+        <el-tab-pane label="注 册" name="register">
+          <div class="pane">
+            <el-input v-model="username" placeholder="用户名（3-20 位字母/数字/下划线）" size="large"
+                      @keyup.enter="handleRegister" />
+            <el-input v-model="password" type="password" placeholder="密码（至少 6 位）" size="large"
+                      show-password @keyup.enter="handleRegister" />
+            <el-input v-model="password2" type="password" placeholder="确认密码" size="large"
+                      show-password @keyup.enter="handleRegister" />
+            <el-button type="primary" size="large" :loading="loading" class="login-btn" @click="handleRegister">
+              注册并登录
+            </el-button>
+          </div>
+        </el-tab-pane>
+      </el-tabs>
     </div>
   </div>
 </template>
@@ -81,6 +130,7 @@ async function handleLogin() {
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
 }
 .login-btn { width: 100%; height: 44px; font-size: 15px; letter-spacing: 6px; }
+.pane { display: flex; flex-direction: column; gap: 14px; padding-top: 6px; }
 .login-hint {
   font-size: 12px; font-weight: 600; color: var(--sk-leather-deep); text-align: center;
   padding: 7px 0; border-radius: 8px;

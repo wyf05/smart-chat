@@ -29,6 +29,13 @@ class LoginRequest(BaseModel):
     password: str = Field(..., min_length=1, max_length=100)
 
 
+class RegisterRequest(BaseModel):
+    """注册请求体：用户名 3-20 位字母/数字/下划线，密码至少 6 位"""
+    username: str = Field(..., min_length=3, max_length=20, pattern=r"^[A-Za-z0-9_]+$",
+                          description="用户名：3-20 位字母/数字/下划线")
+    password: str = Field(..., min_length=6, max_length=100, description="密码：至少 6 位")
+
+
 class OrderIn(BaseModel):
     """订单新增/修改请求体"""
     order_id: str = Field(..., min_length=1, max_length=32, description="订单号")

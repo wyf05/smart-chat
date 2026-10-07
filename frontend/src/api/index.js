@@ -31,6 +31,10 @@ export function login(username, password) {
   return request.post('/api/auth/login', { username, password })
 }
 
+export function register(username, password) {
+  return request.post('/api/auth/register', { username, password })
+}
+
 // ===== 会话管理 =====
 export function listSessions() {
   return request.get('/api/sessions')

@@ -55,7 +55,8 @@ req = urllib.request.Request(
 with urllib.request.urlopen(req, timeout=120) as resp:
     chunks = resp.read().decode("utf-8")
     lines = [l for l in chunks.split("\n\n") if l.startswith("data: ")]
-    text = "".join(json.loads(l[6:]).get("delta", "") for l in lines if l[6:] != "[DONE]")
+    objs = [json.loads(l[6:]) for l in lines if l[6:] != "[DONE]"]
+    text = "".join(o.get("delta") or o.get("text", "") for o in objs)   # 兼容新旧两版事件协议
     print("[stream] chunks =", len(lines), "|", text[:80])
 
 # 5. 参数校验 422

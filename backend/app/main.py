@@ -7,11 +7,11 @@ from collections import defaultdict
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import AIMessageChunk, HumanMessage, SystemMessage
 from sqlalchemy.orm import Session
 
 from app import catalog, memory, stats
-from app.agent import agent_chat
+from app.agent import agent_chat, get_agent_async
 from app.config import RATE_LIMIT, SYSTEM_PROMPT
 from app.database import SessionLocal, init_db
 from app.llm import chat, classify_intent, llm, to_messages
@@ -283,27 +283,86 @@ def smart_chat_api(req: ChatRequest, db: Session = Depends(get_db)):
         return ChatResponse(code=500, message=f"服务异常：{str(e)}", data={"reply": ""})
 
 
-@app.post("/api/chat/stream", dependencies=[Depends(verify_token)])
-async def chat_stream_api(req: ChatRequest, db: Session = Depends(get_db)):
-    """流式对话接口（SSE）：逐字推送 AI 回复"""
+# ============ 流式对话接口（SSE）：三挡共用一套事件协议 ============
+# 事件：{type:'delta',text} 正文增量 | {type:'tool',name} 工具调用 |
+#       {type:'route',route} 自动挡路由结果 | {type:'error',message}；结束发 [DONE]
+
+def _sse(obj: dict) -> str:
+    return f"data: {json.dumps(obj, ensure_ascii=False)}\n\n"
+
+
+async def _chat_event_gen(req: ChatRequest, db: Session):
+    """普通对话流：glm-4-flash 逐字推送，结束落库埋点"""
     messages = [SystemMessage(content=SYSTEM_PROMPT)]
     messages.extend(to_messages(memory.get_history(db, req.session_id)))
     messages.append(HumanMessage(content=req.message))
+    full_reply, t0 = "", time.time()
+    try:
+        async for chunk in llm.astream(messages):     # 异步流式接收
+            if chunk.content:
+                full_reply += chunk.content
+                yield _sse({"type": "delta", "text": chunk.content})
+        duration = int((time.time() - t0) * 1000)
+        memory.append(db, req.session_id, req.message, full_reply,
+                      route="chat", duration_ms=duration)   # 完整回复落库 + 埋点
+        yield "data: [DONE]\n\n"
+    except Exception as e:
+        yield _sse({"type": "error", "message": str(e)})
 
-    async def event_generator():
-        full_reply = ""
-        t0 = time.time()
-        try:
-            async for chunk in llm.astream(messages):     # 异步流式接收
-                if chunk.content:
-                    full_reply += chunk.content
-                    # SSE 格式：data: xxx\n\n（json.dumps 防止内容含换行破坏格式）
-                    yield f"data: {json.dumps({'delta': chunk.content}, ensure_ascii=False)}\n\n"
-            duration = int((time.time() - t0) * 1000)
-            memory.append(db, req.session_id, req.message, full_reply,
-                          route="chat", duration_ms=duration)   # 完整回复落库 + 埋点
-            yield "data: [DONE]\n\n"
-        except Exception as e:
-            yield f"data: {json.dumps({'error': str(e)}, ensure_ascii=False)}\n\n"
 
-    return StreamingResponse(event_generator(), media_type="text/event-stream")
+async def _agent_event_gen(req: ChatRequest, db: Session):
+    """智能体流：astream 逐 token 转发；工具调用发独立事件；结束落库埋点（与非流式一致）"""
+    config = {"configurable": {"thread_id": req.session_id}}
+    full_reply, tools_used, t0 = "", [], time.time()
+    try:
+        async for chunk, _meta in get_agent_async().astream(
+            {"messages": [{"role": "user", "content": req.message}]},
+            config, stream_mode="messages",
+        ):
+            if not isinstance(chunk, AIMessageChunk):
+                continue                            # ToolMessage 等不是模型 token，跳过
+            for tc in chunk.tool_call_chunks:       # 工具名随流式片段到达，去重发事件
+                name = tc.get("name")
+                if name and name not in tools_used:
+                    tools_used.append(name)
+                    yield _sse({"type": "tool", "name": name})
+            if chunk.content:
+                text = chunk.content if isinstance(chunk.content, str) else "".join(
+                    p.get("text", "") for p in chunk.content if isinstance(p, dict))
+                if text:
+                    full_reply += text
+                    yield _sse({"type": "delta", "text": text})
+        if "</think>" in full_reply:                # 与非流式一致的兜底清洗
+            full_reply = full_reply.split("</think>")[-1]
+        record = (f"🔧 [调用工具：{'、'.join(tools_used)}]\n\n" + full_reply) if tools_used else full_reply
+        memory.append(db, req.session_id, req.message, record,
+                      route="agent", tools=tools_used,
+                      duration_ms=int((time.time() - t0) * 1000))
+        yield "data: [DONE]\n\n"
+    except Exception as e:
+        yield _sse({"type": "error", "message": str(e)})
+
+
+@app.post("/api/chat/stream", dependencies=[Depends(verify_token)])
+async def chat_stream_api(req: ChatRequest, db: Session = Depends(get_db)):
+    """普通对话流式接口（SSE）：逐字推送 AI 回复"""
+    return StreamingResponse(_chat_event_gen(req, db), media_type="text/event-stream")
+
+
+@app.post("/api/agent/chat/stream", dependencies=[Depends(verify_token)])
+async def agent_chat_stream_api(req: ChatRequest, db: Session = Depends(get_db)):
+    """智能体流式接口（SSE）：工具调用与正文增量分事件推送"""
+    return StreamingResponse(_agent_event_gen(req, db), media_type="text/event-stream")
+
+
+@app.post("/api/smart/chat/stream", dependencies=[Depends(verify_token)])
+async def smart_chat_stream_api(req: ChatRequest, db: Session = Depends(get_db)):
+    """自动挡流式接口（SSE）：先推路由结果，再转发对应链路的事件流"""
+    async def smart_event_generator():
+        intent = classify_intent(req.message)
+        yield _sse({"type": "route", "route": intent})
+        gen = _agent_event_gen(req, db) if intent == "agent" else _chat_event_gen(req, db)
+        async for ev in gen:
+            yield ev
+
+    return StreamingResponse(smart_event_generator(), media_type="text/event-stream")

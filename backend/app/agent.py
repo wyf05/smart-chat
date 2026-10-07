@@ -7,12 +7,14 @@
 import sqlite3
 from datetime import datetime
 
+import aiosqlite
 import requests
 
 from langchain.agents import create_agent
 from langchain.tools import tool
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.sqlite import SqliteSaver
+from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 
 from app.catalog import (query_coupon_by_code, query_order_by_id,
                          search_knowledge as search_knowledge_db)
@@ -127,22 +129,47 @@ agent_llm = ChatOpenAI(
     extra_body={"thinking": {"type": "disabled"}},
 )
 
+_SYSTEM_PROMPT = (
+    "你是「店小智」，一家电商公司的智能客服。"
+    "用户的问题涉及订单查询、天气、当前时间、优惠券、数学计算时，"
+    "必须调用对应工具获取真实结果，禁止编造；"
+    "凡是涉及店铺业务规则的问题——退换货、售后、发货时间、付款方式、发票、"
+    "包邮、配送范围、会员政策等——无论措辞是直接询问还是“介绍一下”“讲讲”，"
+    "都必须先调用 search_knowledge 检索知识库，"
+    "并依据检索结果回答、注明来自知识库；"
+    "其他问题用简体中文礼貌、简洁地回答，不要为了调用工具而调用工具。"
+)
+
 # 记忆持久化：SqliteSaver 把智能体每轮状态存入文件，重启不丢
-_conn = sqlite3.connect(AGENT_DB_PATH, check_same_thread=False)
+_conn = sqlite3.connect(AGENT_DB_PATH, check_same_thread=False, timeout=30)
 checkpointer = SqliteSaver(_conn)
 
 # 组装智能体：ReAct 循环由 create_agent 内部自动完成
 agent = create_agent(
     model=agent_llm,
     tools=TOOLS,
-    system_prompt=(
-        "你是「店小智」，一家电商公司的智能客服。"
-        "用户的问题涉及订单查询、天气、当前时间、优惠券、数学计算、店铺售后政策时，"
-        "必须调用对应工具获取真实结果，禁止编造；"
-        "其他问题用简体中文礼貌、简洁地回答，不要为了调用工具而调用工具。"
-    ),
+    system_prompt=_SYSTEM_PROMPT,
     checkpointer=checkpointer,   # 传 thread_id 即自动带上历史记忆
 )
+
+# 同一份图编译两个实例：SqliteSaver 不支持异步方法，astream（SSE 流式）需要
+# AsyncSqliteSaver；两个实例共用同一个记忆库文件，会话记忆互通。
+# AsyncSqliteSaver 必须在事件循环内创建，因此在首个流式请求时惰性构建。
+_agent_async = None
+
+
+def get_agent_async():
+    """返回异步版智能体（SSE 流式专用），首次调用时在事件循环内构建"""
+    global _agent_async
+    if _agent_async is None:
+        _aconn = aiosqlite.connect(AGENT_DB_PATH)
+        _agent_async = create_agent(
+            model=agent_llm,
+            tools=TOOLS,
+            system_prompt=_SYSTEM_PROMPT,
+            checkpointer=AsyncSqliteSaver(_aconn),
+        )
+    return _agent_async
 
 
 def agent_chat(message: str, session_id: str) -> dict:

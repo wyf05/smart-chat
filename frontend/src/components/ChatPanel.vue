@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick, onMounted } from 'vue'
+import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Loading } from '@element-plus/icons-vue'
@@ -12,9 +12,17 @@ const messages = ref([])       // [{role:'user'|'assistant', content:'...'}]
 const inputText = ref('')
 const loading = ref(false)
 const mode = ref('chat')       // 对话模式：chat=普通对话 / auto=自动路由（意图识别） / agent=智能体
-const streamMode = ref(true)   // 流式输出开关，默认开启（仅普通对话模式生效）
+const streamMode = ref(true)   // 流式输出开关，默认开启（三挡均支持流式）
 const streaming = ref(false)   // 流式回复进行中（占位气泡已推入，不再显示独立思考气泡）
 const msgListRef = ref(null)
+
+// 挡位与流式开关持久化：刷新 / 重新登录后不再跳回默认值
+const MODE_KEY = 'dxz_mode'
+const STREAM_KEY = 'dxz_stream'
+mode.value = localStorage.getItem(MODE_KEY) || 'chat'
+streamMode.value = localStorage.getItem(STREAM_KEY) !== '0'
+watch(mode, v => localStorage.setItem(MODE_KEY, v))
+watch(streamMode, v => localStorage.setItem(STREAM_KEY, v ? '1' : '0'))
 
 // 头部标题随模式切换
 const modeTitle = computed(() => ({
@@ -51,9 +59,12 @@ async function handleSendText(text) {
   scrollToBottom()
   loading.value = true
   try {
-    // 流式只在普通对话模式下生效；自动/智能体走统一请求-响应
-    if (mode.value === 'chat' && streamMode.value) {
-      await handleSendStream(text)
+    // 三挡均支持流式；流式关闭时走请求-响应
+    if (streamMode.value) {
+      const url = mode.value === 'agent' ? '/api/agent/chat/stream'
+                : mode.value === 'auto' ? '/api/smart/chat/stream'
+                : '/api/chat/stream'
+      await handleSSE(url, text)
       return
     }
     const res = mode.value === 'agent'
@@ -87,15 +98,16 @@ async function handleSend() {
   await handleSendText(text)
 }
 
-// 流式发送：fetch 逐块读取 SSE
-// 注意：浏览器原生 EventSource 只支持 GET，POST 流式要用 fetch + ReadableStream 手动读
-async function handleSendStream(text) {
+// 通用 SSE 读取：POST + ReadableStream（浏览器原生 EventSource 只支持 GET）
+// 事件协议：{type:'route',route} 自动挡路由结果 | {type:'tool',name} 工具调用 |
+//          {type:'delta',text} 正文增量 | {type:'error',message}；兼容旧协议 {delta}
+async function handleSSE(url, text) {
   streaming.value = true
   messages.value.push({ role: 'assistant', content: '' })
   const idx = messages.value.length - 1
 
   try {
-    const res = await fetch('/api/chat/stream', {
+    const res = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -105,6 +117,7 @@ async function handleSendStream(text) {
     })
     const reader = res.body.getReader()
     const decoder = new TextDecoder()
+    const tools = []
 
     while (true) {
       const { done, value } = await reader.read()
@@ -113,7 +126,22 @@ async function handleSendStream(text) {
         if (!line.startsWith('data: ')) continue
         const payload = line.slice(6)
         if (payload === '[DONE]') continue
-        try { messages.value[idx].content += JSON.parse(payload).delta } catch (e) { /* 忽略半截包 */ }
+        let obj
+        try { obj = JSON.parse(payload) } catch (e) { continue }   // 忽略半截包
+        if (obj.type === 'route') {
+          messages.value[idx].content = `🧭 意图路由 → ${obj.route === 'agent' ? '智能体' : '普通对话'}\n\n`
+        } else if (obj.type === 'tool') {
+          if (!tools.includes(obj.name)) tools.push(obj.name)
+          messages.value[idx].content = `🔧 本轮调用了工具：${tools.join('、')}\n\n`
+        } else if (obj.type === 'delta') {
+          let t = obj.text
+          if (messages.value[idx].content.endsWith('\n\n')) t = t.replace(/^\n+/, '')   // 去掉工具前缀后模型开头的空行
+          messages.value[idx].content += t
+        } else if (obj.type === 'error') {
+          ElMessage.error(obj.message || '服务异常，请稍后再试')
+        } else if (obj.delta) {
+          messages.value[idx].content += obj.delta
+        }
         scrollToBottom()
       }
     }
@@ -134,7 +162,7 @@ async function scrollToBottom() {
       <span class="title">{{ modeTitle }}</span>
       <span class="header-right">
         <span class="agent-toggle">
-          <el-switch v-model="streamMode" :disabled="mode !== 'chat'" />
+          <el-switch v-model="streamMode" />
           <span class="agent-label">流式输出</span>
         </span>
         <span class="agent-toggle">

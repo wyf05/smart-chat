@@ -57,6 +57,11 @@ export function sendAgentChat(message, sessionId) {
   return request.post('/api/agent/chat', { message, session_id: sessionId })
 }
 
+// 统一入口：后端意图识别后自动路由到普通对话或智能体
+export function sendSmartChat(message, sessionId) {
+  return request.post('/api/smart/chat', { message, session_id: sessionId })
+}
+
 // ===== 业务数据中心：订单 =====
 export function listOrders() {
   return request.get('/api/orders')

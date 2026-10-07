@@ -1,9 +1,9 @@
 <script setup>
-import { ref, nextTick, onMounted } from 'vue'
+import { ref, computed, nextTick, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Loading } from '@element-plus/icons-vue'
-import { sendChat, sendAgentChat, getMessages } from '../api/index.js'
+import { sendChat, sendAgentChat, sendSmartChat, getMessages } from '../api/index.js'
 
 const props = defineProps({ sessionId: { type: String, required: true } })
 const route = useRoute()
@@ -11,17 +11,24 @@ const route = useRoute()
 const messages = ref([])       // [{role:'user'|'assistant', content:'...'}]
 const inputText = ref('')
 const loading = ref(false)
-const agentMode = ref(false)   // 智能体模式开关
-const streamMode = ref(true)   // 流式输出开关，默认开启
+const mode = ref('chat')       // 对话模式：chat=普通对话 / auto=自动路由（意图识别） / agent=智能体
+const streamMode = ref(true)   // 流式输出开关，默认开启（仅普通对话模式生效）
 const streaming = ref(false)   // 流式回复进行中（占位气泡已推入，不再显示独立思考气泡）
 const msgListRef = ref(null)
+
+// 头部标题随模式切换
+const modeTitle = computed(() => ({
+  chat: '普通对话模式',
+  auto: '自动路由模式（意图识别，自动分流普通对话/智能体）',
+  agent: '智能体模式（可查订单/天气/计算/时间/优惠券）',
+}[mode.value]))
 
 onMounted(async () => {
   await loadHistory()
   // 支持从其他页面（业务数据/知识库）带问题跳转过来，自动开启智能体并提问
   if (route.query.ask) {
     inputText.value = String(route.query.ask)
-    if (route.query.agent === '1') agentMode.value = true
+    if (route.query.agent === '1') mode.value = 'agent'
     const text = inputText.value
     inputText.value = ''
     await handleSendText(text)
@@ -44,13 +51,16 @@ async function handleSendText(text) {
   scrollToBottom()
   loading.value = true
   try {
-    if (streamMode.value && !agentMode.value) {
+    // 流式只在普通对话模式下生效；自动/智能体走统一请求-响应
+    if (mode.value === 'chat' && streamMode.value) {
       await handleSendStream(text)
       return
     }
-    const res = agentMode.value
+    const res = mode.value === 'agent'
       ? await sendAgentChat(text, props.sessionId)
-      : await sendChat(text, props.sessionId)
+      : mode.value === 'auto'
+        ? await sendSmartChat(text, props.sessionId)
+        : await sendChat(text, props.sessionId)
     if (res.data.code === 0) {
       let replyText = res.data.data.reply
       const tools = res.data.data.tools_used || []
@@ -121,15 +131,18 @@ async function scrollToBottom() {
 <template>
   <div class="chat-panel">
     <div class="chat-header">
-      <span class="title">{{ agentMode ? '智能体模式（可查订单/天气/计算/时间/优惠券）' : '普通对话模式' }}</span>
+      <span class="title">{{ modeTitle }}</span>
       <span class="header-right">
         <span class="agent-toggle">
-          <el-switch v-model="streamMode" />
+          <el-switch v-model="streamMode" :disabled="mode !== 'chat'" />
           <span class="agent-label">流式输出</span>
         </span>
         <span class="agent-toggle">
-          <el-switch v-model="agentMode" />
-          <span class="agent-label">智能体模式</span>
+          <el-radio-group v-model="mode" size="small">
+            <el-radio-button value="chat">普通</el-radio-button>
+            <el-radio-button value="auto">自动</el-radio-button>
+            <el-radio-button value="agent">智能体</el-radio-button>
+          </el-radio-group>
         </span>
       </span>
     </div>

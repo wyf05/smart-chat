@@ -35,6 +35,14 @@ async function handleLogin() {
   }
 }
 
+function errText(e, fallback) {
+  // 后端正常返回 {detail: "人话"}；422 校验失败时 detail 是数组，取第一条 msg
+  const d = e.response?.data
+  if (typeof d?.detail === 'string') return d.detail
+  if (Array.isArray(d?.detail)) return d.detail[0]?.msg || fallback
+  return fallback
+}
+
 async function handleRegister() {
   if (!username.value || !password.value || !password2.value) {
     ElMessage.warning('请填写完整')
@@ -51,9 +59,7 @@ async function handleRegister() {
     ElMessage.success('注册成功，已自动登录')
     router.push({ name: 'home' })
   } catch (e) {
-    // 422 是格式校验（用户名/密码规则），409 是用户名重复
-    const d = e.response?.data
-    ElMessage.error(d?.detail || (d?.message === 'failure' ? '格式不符合要求' : '注册失败，请稍后再试'))
+    ElMessage.error(errText(e, '注册失败，请稍后再试'))
   } finally {
     loading.value = false
   }

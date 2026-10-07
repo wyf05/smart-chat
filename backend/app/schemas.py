@@ -30,10 +30,10 @@ class LoginRequest(BaseModel):
 
 
 class RegisterRequest(BaseModel):
-    """注册请求体：用户名 3-20 位字母/数字/下划线，密码至少 6 位"""
-    username: str = Field(..., min_length=3, max_length=20, pattern=r"^[A-Za-z0-9_]+$",
-                          description="用户名：3-20 位字母/数字/下划线")
-    password: str = Field(..., min_length=6, max_length=100, description="密码：至少 6 位")
+    """注册请求体。格式规则（长度/字符集）由 register 接口主动校验并返回中文提示；
+    这里只约束类型与上限，避免 Pydantic 422 的英文数组结构直接透给前端"""
+    username: str = Field(..., min_length=1, max_length=50, description="用户名")
+    password: str = Field(..., min_length=1, max_length=100, description="密码")
 
 
 class OrderIn(BaseModel):

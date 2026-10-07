@@ -1,6 +1,7 @@
 """FastAPI 服务入口：认证 + 中间件（日志+限流）+ 会话/对话/业务数据/统计全部接口"""
 import json
 import logging
+import re
 import time
 from collections import defaultdict
 
@@ -97,6 +98,11 @@ def login(req: LoginRequest, db: Session = Depends(get_db)):
 @app.post("/api/auth/register")
 def register(req: RegisterRequest, db: Session = Depends(get_db)):
     """账号注册：用户名唯一，成功后直接签发 JWT（免二次登录）"""
+    # 主动校验并返回人话错误（Pydantic 422 的数组结构前端不好展示）
+    if len(req.password) < 6:
+        raise HTTPException(status_code=422, detail="密码至少 6 位")
+    if not re.fullmatch(r"[A-Za-z0-9_]{3,20}", req.username):
+        raise HTTPException(status_code=422, detail="用户名需为 3-20 位字母/数字/下划线")
     if db.get(User, req.username):
         raise HTTPException(status_code=409, detail="用户名已被占用，请换一个")
     user = User(username=req.username, password_hash=hash_password(req.password))
